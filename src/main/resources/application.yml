@@ -1,0 +1,42 @@
+server:
+  port: 5000
+
+spring:
+  application:
+    name: kms-backend
+  main:
+    allow-bean-definition-overriding: true
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USER}
+    password: ${DB_PASS}
+    driver-class-name: org.postgresql.Driver
+  #  redis:
+  #    host: ${REDIS_HOST}
+  #    port: ${REDIS_PORT}
+  #  cache:
+  #    type: redis
+  #    redis:
+  #      cache-null-values: false
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    hibernate:
+      ddl-auto: update
+
+#logging:
+#  file:
+#    name: D:\kiet.nguyen-dang\project-base-learning-6\logs\elk-stack.log
+
+sentry:
+  dsn: https://e413f73700b2489ca9b3d7072613b292@o4504211653853184.ingest.sentry.io/4504265726296064
+  logging:
+    minimum-breadcrumb-level: debug
+    minimum-event-level: info
+  in-app-includes: com.backend.kmsproject
+  send-default-pii: true
+  exception-resolver-order: -1
+  traces-sample-rate: 1.0
