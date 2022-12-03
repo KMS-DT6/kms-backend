@@ -1,0 +1,7 @@
+- KMS backend
+- Spring
+- Git flow
+- Docker
+- Jenkins
+- Sentry
+- Unit test
