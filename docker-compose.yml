@@ -15,9 +15,9 @@ services:
       - db
     #      - cache
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
-      - SPRING_DATASOURCE_USERNAME=${DB_USER}
-      - SPRING_DATASOURCE_PASSWORD=${DB_PASS}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://${DB_KMS_HOST}:${DB_KMS_PORT}/${DB_KMS_NAME}
+      - SPRING_DATASOURCE_USERNAME=${DB_KMS_USER}
+      - SPRING_DATASOURCE_PASSWORD=${DB_KMS_PASS}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
     #      - REDIS_HOST=${REDIS_HOST}
     #      - REDIS_PORT=${REDIS_PORT}
@@ -31,8 +31,8 @@ services:
       - "5432:5432"
     restart: always
     environment:
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_USER=${DB_KMS_USER}
+      - POSTGRES_PASSWORD=${DB_KMS_PASS}
     networks:
       - kms_network
 
