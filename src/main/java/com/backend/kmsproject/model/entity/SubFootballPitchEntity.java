@@ -11,11 +11,11 @@ import java.sql.Timestamp;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "subfootbalpitch")
+@Table(name = "subfootballpitch")
 public class SubFootballPitchEntity implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "subfootbalpitchid")
+    @Column(name = "subfootballpitchid")
     private Long subFootBallPitchId;
     @Column(name = "subfootballpitchname")
     private String subFootballPitchName;

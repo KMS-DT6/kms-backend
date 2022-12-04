@@ -26,6 +26,10 @@ public class UserEntity implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "addressid")
     private AddressEntity address;
+    @Column(name = "firstname")
+    private String firstName;
+    @Column(name = "lastname")
+    private String lastName;
     @Column(name = "username")
     private String username;
     @Column(name = "password")
