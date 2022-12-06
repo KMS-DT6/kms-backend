@@ -1,10 +1,12 @@
 package com.backend.kmsproject.response;
 
 import com.backend.kmsproject.model.dto.common.ErrorDTO;
-import lombok.*;
+import com.backend.kmsproject.util.DatetimeUtils;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.io.Serializable;
-import java.sql.Timestamp;
 import java.util.List;
 
 @Getter
@@ -15,5 +17,5 @@ public class Response<T> implements Serializable {
     private String message;
     private List<ErrorDTO> errorDTOs;
     private T data;
-    private Timestamp timestamp;
+    private String dateTime;
 }

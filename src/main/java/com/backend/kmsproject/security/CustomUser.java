@@ -12,7 +12,6 @@ import java.util.Collection;
 @Setter
 public class CustomUser extends User {
     private Long userId;
-    private String username;
     private String firstName;
     private String lastName;
     private String role;
@@ -39,11 +38,10 @@ public class CustomUser extends User {
 
     public CustomUser(String username, String password, boolean enabled, boolean accountNonExpired,
                       boolean credentialsNonExpired, boolean accountNonLocked, Collection<? extends GrantedAuthority> authorities,
-                      Long userId, String username1, String firstName, String lastName, String role, String address, String district,
+                      Long userId, String firstName, String lastName, String role, String address, String district,
                       Long footballPitchId, Timestamp createdDate, Timestamp modifiedDate) {
         super(username, password, enabled, accountNonExpired, credentialsNonExpired, accountNonLocked, authorities);
         this.userId = userId;
-        this.username = username1;
         this.firstName = firstName;
         this.lastName = lastName;
         this.role = role;

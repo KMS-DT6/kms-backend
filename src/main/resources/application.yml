@@ -6,7 +6,7 @@ spring:
     name: kms-backend
   main:
     allow-bean-definition-overriding: true
-    allow-circular-references: true
+#    allow-circular-references: true
   datasource:
     url: jdbc:postgresql://${DB_KMS_HOST}:${DB_KMS_PORT}/${DB_KMS_NAME}
     username: ${DB_KMS_USER}
