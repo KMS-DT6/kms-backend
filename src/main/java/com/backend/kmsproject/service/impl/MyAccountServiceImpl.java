@@ -9,8 +9,10 @@ import com.backend.kmsproject.model.entity.AddressEntity;
 import com.backend.kmsproject.model.entity.UserEntity;
 import com.backend.kmsproject.repository.jpa.AddressRepository;
 import com.backend.kmsproject.repository.jpa.UserRepository;
-import com.backend.kmsproject.request.UpdateMyAccountRequest;
+import com.backend.kmsproject.request.myaccount.ChangePasswordRequest;
+import com.backend.kmsproject.request.myaccount.UpdateMyAccountRequest;
 import com.backend.kmsproject.response.ErrorResponse;
+import com.backend.kmsproject.response.NoContentResponse;
 import com.backend.kmsproject.response.OnlyIdResponse;
 import com.backend.kmsproject.response.user.MyAccountResponse;
 import com.backend.kmsproject.security.KmsPrincipal;
@@ -18,6 +20,7 @@ import com.backend.kmsproject.service.MyAccountService;
 import com.backend.kmsproject.util.RequestUtils;
 import com.backend.kmsproject.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -29,6 +32,7 @@ import java.util.*;
 public class MyAccountServiceImpl implements MyAccountService {
     private final UserRepository userRepository;
     private final AddressRepository addressRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public MyAccountResponse getMyAccount() {
@@ -96,6 +100,56 @@ public class MyAccountServiceImpl implements MyAccountService {
                 .setId(user.getUserId())
                 .setName(user.getFirstName() + " " + user.getLastName())
                 .build();
+    }
+
+    @Override
+    public NoContentResponse changeMyPassword(ChangePasswordRequest request) {
+        Map<String, String> errors = new HashMap<>();
+        Map<String, String> mapPassword = new HashMap<>() {{
+            put("currentPassword", request.getCurrentPassword());
+            put("newPassword", request.getNewPassword());
+            put("confirmPassword", request.getConfirmPassword());
+        }};
+        mapPassword.keySet().forEach(p -> {
+            validFormatPassword(errors, p, mapPassword.get(p));
+        });
+        KmsPrincipal principal = SecurityUtils.getPrincipal();
+        UserEntity user = userRepository.findById(principal.getUserId())
+                .orElseThrow(() -> new NotFoundException("Not found user"));
+        validChangePassword(errors, request, user.getPassword());
+        if (!errors.isEmpty()) {
+            return NoContentResponse.builder()
+                    .setSuccess(false)
+                    .setErrorResponse(ErrorResponse.builder()
+                            .setErrors(errors)
+                            .build())
+                    .build();
+        }
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+        return NoContentResponse.builder()
+                .setSuccess(true)
+                .build();
+    }
+
+    public void validFormatPassword(Map<String, String> errors, String keyPassword, String valuePassword) {
+        if (!StringUtils.hasText(valuePassword)) {
+            errors.put(keyPassword, ErrorCode.MISSING_VALUE.name());
+        } else if (valuePassword.length() < KmsConstant.PASSWORD_MIN_SIZE) {
+            errors.put(keyPassword, ErrorCode.TOO_SHORT.name());
+        } else if (valuePassword.length() > KmsConstant.PASSWORD_MAX_SIZE){
+            errors.put(keyPassword, ErrorCode.TOO_LONG.name());
+        }
+    }
+
+    public void validChangePassword(Map<String, String> errors, ChangePasswordRequest request, String myCurrentPassword) {
+        if (!errors.containsKey("currentPassword") && !passwordEncoder.matches(request.getCurrentPassword(), myCurrentPassword)) {
+            errors.put("currentPassword", ErrorCode.NOT_FOUND.name());
+        }
+        if (!errors.containsKey("newPassword") && !errors.containsKey("confirmPassword")
+                && !request.getConfirmPassword().equals(request.getNewPassword())) {
+            errors.put("confirmPassword", ErrorCode.INVALID_VALUE.name());
+        }
     }
 
     public void validFormatField(Map<String, String> errors, UpdateMyAccountRequest request) {
