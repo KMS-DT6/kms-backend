@@ -8,11 +8,13 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 
 import java.util.Map;
 
 @Configuration
+@EnableSwagger2
 public class SwaggerConfig {
     @Bean
     public OpenAPI openAPI() {

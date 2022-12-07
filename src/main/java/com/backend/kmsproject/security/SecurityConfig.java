@@ -1,5 +1,6 @@
 package com.backend.kmsproject.security;
 
+import com.backend.kmsproject.common.enums.KmsRole;
 import com.backend.kmsproject.filter.CustomAuthenticationFilter;
 import com.backend.kmsproject.filter.CustomAuthorizationFilter;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         http.authorizeRequests().antMatchers("/api/login/**").permitAll();
         http.authorizeRequests().antMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll();
+        http.authorizeRequests().antMatchers("/api/my-account/**").hasAnyAuthority(KmsRole.ADMIN_ROLE.getRole(),
+                KmsRole.FOOTBALL_PITCH_ROLE.getRole(), KmsRole.CUSTOMER_ROLE.getRole());
         http.authorizeRequests().anyRequest().authenticated();
         http.addFilter(filter);
         http.addFilterBefore(new CustomAuthorizationFilter(userDetailsService), UsernamePasswordAuthenticationFilter.class);

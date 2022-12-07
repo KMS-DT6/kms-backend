@@ -1,12 +1,14 @@
 package com.backend.kmsproject.common.exception;
 
 import com.backend.kmsproject.response.Response;
+import com.backend.kmsproject.util.DatetimeUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @RestControllerAdvice
 public class RequestExceptionHandler {
@@ -15,20 +17,20 @@ public class RequestExceptionHandler {
         Response<?> error = Response.builder()
                 .setSuccess(false)
                 .setMessage(exception.getMessage())
-                .setTimestamp(new Timestamp(System.currentTimeMillis()))
+                .setDateTime(DatetimeUtils.formatLocalDateTimeNow())
                 .build();
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
-//    @ExceptionHandler(ErrorResponseRuntimeException.class)
-//    public ResponseEntity<?> handleErrorResponseRuntimeException(ErrorResponseRuntimeException exception) {
-//        Response<?> errors = Response.builder()
-//                .setSuccess(false)
-//                .setMessage(exception.getMessage())
-//                .setErrorDTOs(exception.getErrorDTOs())
-//                .setTimestamp(new Timestamp(System.currentTimeMillis()))
-//                .build();
-//        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
-//    }
+    @ExceptionHandler(ErrorResponseRuntimeException.class)
+    public ResponseEntity<?> handleErrorResponseRuntimeException(ErrorResponseRuntimeException exception) {
+        Response<?> errors = Response.builder()
+                .setSuccess(false)
+                .setMessage(exception.getMessage())
+                .setErrorDTOs(exception.getErrorDTOs())
+                .setDateTime(DatetimeUtils.formatLocalDateTimeNow())
+                .build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+    }
 
 }
