@@ -17,4 +17,6 @@ public class KmsConstant {
     // Size
     public static final Integer USERNAME_MIN_SIZE = 5;
     public static final Integer USERNAME_MAX_SIZE = 15;
+    public static final Integer PASSWORD_MIN_SIZE = 5;
+    public static final Integer PASSWORD_MAX_SIZE = 15;
 }

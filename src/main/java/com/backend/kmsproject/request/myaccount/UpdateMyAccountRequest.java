@@ -1,4 +1,4 @@
-package com.backend.kmsproject.request;
+package com.backend.kmsproject.request.myaccount;
 
 import lombok.Getter;
 import lombok.Setter;

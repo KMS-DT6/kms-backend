@@ -2,8 +2,11 @@ package com.backend.kmsproject.controller;
 
 import com.backend.kmsproject.converter.MyAccountConverter;
 import com.backend.kmsproject.model.dto.MyAccountDTO;
+import com.backend.kmsproject.model.dto.common.NoContentDTO;
 import com.backend.kmsproject.model.dto.common.OnlyIdDTO;
-import com.backend.kmsproject.request.UpdateMyAccountRequest;
+import com.backend.kmsproject.request.myaccount.ChangePasswordRequest;
+import com.backend.kmsproject.request.myaccount.UpdateMyAccountRequest;
+import com.backend.kmsproject.response.NoContentResponse;
 import com.backend.kmsproject.response.OnlyIdResponse;
 import com.backend.kmsproject.response.Response;
 import com.backend.kmsproject.response.user.MyAccountResponse;
@@ -32,6 +35,16 @@ public class MyAccountController {
     @PutMapping
     public Response<OnlyIdDTO> updateMyAccount(@RequestBody UpdateMyAccountRequest request) {
         OnlyIdResponse response = myAccountService.updateMyAccount(request);
+        if (response.getSuccess()) {
+            return myAccountConverter.getSuccess(response);
+        }
+        return myAccountConverter.getError(response.getErrorResponse());
+    }
+
+    @Operation(summary = "Change My Password")
+    @PutMapping("/change-password")
+    public Response<NoContentDTO> changeMyPassword(@RequestBody ChangePasswordRequest request) {
+        NoContentResponse response = myAccountService.changeMyPassword(request);
         if (response.getSuccess()) {
             return myAccountConverter.getSuccess(response);
         }
