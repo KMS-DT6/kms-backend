@@ -59,7 +59,7 @@ public class SubFootballPitchController {
     }
 
     @Operation(summary = "Update Sub Football Pitch")
-    @PutMapping
+    @PutMapping("/{id}")
     public Response<OnlyIdDTO> updateSubFootballPitch(@PathVariable("id") Long subFootballPitchId,
                                                       @RequestBody CreateUpdateSubFootballPitchRequest request) {
         OnlyIdResponse response = subFootballPitchService.updateSubFootballPitch(subFootballPitchId, request);
@@ -70,7 +70,7 @@ public class SubFootballPitchController {
     }
 
     @Operation(summary = "Delete Sub Football Pitch")
-    @DeleteMapping
+    @DeleteMapping("/{id}")
     public Response<NoContentDTO> deleteSubFootballPitch(@PathVariable("id") Long subFootballPitchId) {
         NoContentResponse response = subFootballPitchService.deleteSubFootballPitch(subFootballPitchId);
         if (response.getSuccess()) {
