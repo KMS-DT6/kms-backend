@@ -1,9 +1,6 @@
 package com.backend.kmsproject.model.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.io.Serializable;
 
@@ -11,6 +8,7 @@ import java.io.Serializable;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder(setterPrefix = "set")
 public class AddressDTO implements Serializable {
     private Long addressId;
     private String address;
