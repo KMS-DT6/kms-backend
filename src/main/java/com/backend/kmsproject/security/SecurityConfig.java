@@ -35,6 +35,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         http.authorizeRequests().antMatchers("/api/login/**").permitAll();
         http.authorizeRequests().antMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll();
+        http.authorizeRequests().antMatchers("/api/customer/register/**").permitAll();
         http.authorizeRequests().antMatchers("/api/my-account/**").hasAnyAuthority(KmsRole.ADMIN_ROLE.getRole(),
                 KmsRole.FOOTBALL_PITCH_ROLE.getRole(), KmsRole.CUSTOMER_ROLE.getRole());
         http.authorizeRequests().antMatchers("/api/football-pitches/**").hasAuthority(KmsRole.ADMIN_ROLE.getRole());
