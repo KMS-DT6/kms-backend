@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class CreateUpdateFootballPitchAdminRequest {
+public class CreateFootballPitchAdminRequest {
     private Long footballPitchId;
     private String address;
     private String district;

@@ -36,4 +36,11 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
             "WHERE s.username = ?1"
     )
     Boolean selectExistsUserName(String username);
+
+    @Query("SELECT DISTINCT u FROM UserEntity u" +
+            " LEFT JOIN FETCH u.address a"+
+            " LEFT JOIN FETCH u.footballPitch f"+
+            " LEFT JOIN FETCH u.role r"+
+            " WHERE u.userId=:id AND r.roleName = :role")
+    Optional<UserEntity> findByIdAndRole(@Param("id") Long id,@Param("role") String role);
 }

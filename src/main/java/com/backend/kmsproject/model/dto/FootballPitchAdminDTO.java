@@ -9,7 +9,7 @@ import lombok.*;
 @Builder(setterPrefix = "set")
 public class FootballPitchAdminDTO {
     private Long id;
-    private Long footballPitchId;
+    private FootballPitchDTO footballPitch;
     private AddressDTO address;
     private String firstName;
     private String lastName;

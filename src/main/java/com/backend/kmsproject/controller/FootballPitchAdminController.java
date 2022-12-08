@@ -1,11 +1,14 @@
 package com.backend.kmsproject.controller;
 
 import com.backend.kmsproject.converter.FootballPitchAdminConverter;
+import com.backend.kmsproject.model.dto.FootballPitchAdminDTO;
 import com.backend.kmsproject.model.dto.common.OnlyIdDTO;
 import com.backend.kmsproject.request.footballpitch.CreateUpdateFootballPitchRequest;
-import com.backend.kmsproject.request.footballpitchadmin.CreateUpdateFootballPitchAdminRequest;
+import com.backend.kmsproject.request.footballpitchadmin.CreateFootballPitchAdminRequest;
+import com.backend.kmsproject.request.footballpitchadmin.UpdateFootballPitchAdminRequest;
 import com.backend.kmsproject.response.OnlyIdResponse;
 import com.backend.kmsproject.response.Response;
+import com.backend.kmsproject.response.footballpitchadmin.GetFootballPitchAdminResponse;
 import com.backend.kmsproject.service.FootballPitchAdminService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,13 +24,35 @@ public class FootballPitchAdminController {
 
     private final FootballPitchAdminConverter footballPitchAdminConverter;
 
-    @Operation(summary = "Create Football Pitch Admin")
+    @Operation(summary = "Create FootballPitch Admin")
     @PostMapping
-    public Response<OnlyIdDTO> createFootballPitch(@RequestBody CreateUpdateFootballPitchAdminRequest request) {
+    public Response<OnlyIdDTO> createFootballPitch(@RequestBody CreateFootballPitchAdminRequest request) {
         OnlyIdResponse response = footballPitchAdminService.cerateFootballPitchAdmin(request);
         if (response.getSuccess()) {
             return footballPitchAdminConverter.getSuccess(response);
         }
         return footballPitchAdminConverter.getError(response.getErrorResponse());
     }
+
+    @Operation(summary = "Get FootballPitch Admin")
+    @GetMapping("/{id}")
+    public Response<FootballPitchAdminDTO> getFootballPitch(@PathVariable("id") Long id) {
+        GetFootballPitchAdminResponse response = footballPitchAdminService.getFootballPitchAdmin(id);
+        if (response.getSuccess()) {
+            return footballPitchAdminConverter.getSuccess(response);
+        }
+        return footballPitchAdminConverter.getError(response.getErrorResponse());
+    }
+
+    @Operation(summary = "Update Football Pitch Amdin")
+    @PutMapping("/{id}")
+    public Response<OnlyIdDTO> updateFootballPitchAdmin(@PathVariable("id") Long footballPitchAdminId,
+                                                   @RequestBody UpdateFootballPitchAdminRequest request) {
+        OnlyIdResponse response = footballPitchAdminService.updateFootballPitchAdmin(footballPitchAdminId, request);
+        if (response.getSuccess()) {
+            return footballPitchAdminConverter.getSuccess(response);
+        }
+        return footballPitchAdminConverter.getError(response.getErrorResponse());
+    }
+
 }
