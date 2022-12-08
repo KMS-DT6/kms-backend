@@ -2,10 +2,12 @@ package com.backend.kmsproject.controller;
 
 import com.backend.kmsproject.converter.FootballPitchAdminConverter;
 import com.backend.kmsproject.model.dto.FootballPitchAdminDTO;
+import com.backend.kmsproject.model.dto.common.NoContentDTO;
 import com.backend.kmsproject.model.dto.common.OnlyIdDTO;
 import com.backend.kmsproject.request.footballpitch.CreateUpdateFootballPitchRequest;
 import com.backend.kmsproject.request.footballpitchadmin.CreateFootballPitchAdminRequest;
 import com.backend.kmsproject.request.footballpitchadmin.UpdateFootballPitchAdminRequest;
+import com.backend.kmsproject.response.NoContentResponse;
 import com.backend.kmsproject.response.OnlyIdResponse;
 import com.backend.kmsproject.response.Response;
 import com.backend.kmsproject.response.footballpitchadmin.GetFootballPitchAdminResponse;
@@ -49,6 +51,16 @@ public class FootballPitchAdminController {
     public Response<OnlyIdDTO> updateFootballPitchAdmin(@PathVariable("id") Long footballPitchAdminId,
                                                    @RequestBody UpdateFootballPitchAdminRequest request) {
         OnlyIdResponse response = footballPitchAdminService.updateFootballPitchAdmin(footballPitchAdminId, request);
+        if (response.getSuccess()) {
+            return footballPitchAdminConverter.getSuccess(response);
+        }
+        return footballPitchAdminConverter.getError(response.getErrorResponse());
+    }
+
+    @Operation(summary = "Delete Football Pitch Admin")
+    @DeleteMapping("/{id}")
+    public Response<NoContentDTO> deleteFootballPitchAdmin(@PathVariable("id") Long footballPitchAdminId) {
+        NoContentResponse response = footballPitchAdminService.deleteFootballPitchAdmin(footballPitchAdminId);
         if (response.getSuccess()) {
             return footballPitchAdminConverter.getSuccess(response);
         }
