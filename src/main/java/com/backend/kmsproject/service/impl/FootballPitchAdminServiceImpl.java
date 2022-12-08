@@ -12,6 +12,7 @@ import com.backend.kmsproject.model.entity.RoleEntity;
 import com.backend.kmsproject.model.entity.UserEntity;
 import com.backend.kmsproject.repository.jpa.AddressRepository;
 import com.backend.kmsproject.repository.jpa.FootballPitchRepository;
+import com.backend.kmsproject.repository.jpa.RoleRepository;
 import com.backend.kmsproject.repository.jpa.UserRepository;
 import com.backend.kmsproject.request.footballpitchadmin.CreateFootballPitchAdminRequest;
 import com.backend.kmsproject.request.footballpitchadmin.UpdateFootballPitchAdminRequest;
@@ -139,7 +140,7 @@ public class FootballPitchAdminServiceImpl implements FootballPitchAdminService 
         user.setFootballPitch(footballPitchRepository.findById(request.getFootballPitchId()).get());
         user.setCreatedBy(principal.getUserId());
         user.setCreatedDate(new Timestamp(System.currentTimeMillis()));
-        Optional<RoleEntity> role = roleRepository.findByRoleName(KmsRole.FOOTBALL_PITCH_ROLE.getRole());
+        Optional<RoleEntity> role = roleRepository.findById(KmsRole.FOOTBALL_PITCH_ROLE.getRoleId());
         if(!role.isEmpty()){
             user.setRole(role.get());
         }
