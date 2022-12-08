@@ -12,7 +12,6 @@ import com.backend.kmsproject.model.entity.RoleEntity;
 import com.backend.kmsproject.model.entity.UserEntity;
 import com.backend.kmsproject.repository.jpa.AddressRepository;
 import com.backend.kmsproject.repository.jpa.FootballPitchRepository;
-import com.backend.kmsproject.repository.jpa.RoleRepository;
 import com.backend.kmsproject.repository.jpa.UserRepository;
 import com.backend.kmsproject.request.footballpitchadmin.CreateFootballPitchAdminRequest;
 import com.backend.kmsproject.request.footballpitchadmin.UpdateFootballPitchAdminRequest;
@@ -20,6 +19,7 @@ import com.backend.kmsproject.response.ErrorResponse;
 import com.backend.kmsproject.response.NoContentResponse;
 import com.backend.kmsproject.response.OnlyIdResponse;
 import com.backend.kmsproject.response.footballpitchadmin.GetFootballPitchAdminResponse;
+import com.backend.kmsproject.response.footballpitchadmin.ListFootballPitchAdminResponse;
 import com.backend.kmsproject.security.KmsPrincipal;
 import com.backend.kmsproject.service.FootballPitchAdminService;
 import com.backend.kmsproject.util.RequestUtils;
@@ -31,8 +31,10 @@ import org.springframework.util.StringUtils;
 
 import java.sql.Timestamp;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -126,6 +128,8 @@ public class FootballPitchAdminServiceImpl implements FootballPitchAdminService 
         address.setAddress(request.getAddress());
         address.setDistrict(RequestUtils.blankIfNull(request.getDistrict()));
         address.setCity(RequestUtils.blankIfNull(request.getCity()));
+        address.setCreatedBy(principal.getUserId());
+        address.setCreatedDate(new Timestamp(System.currentTimeMillis()));
         UserEntity user = new UserEntity();
         user.setUsername(request.getUsername());
         user.setPhoneNumber(request.getPhoneNumber());
@@ -222,6 +226,17 @@ public class FootballPitchAdminServiceImpl implements FootballPitchAdminService 
                 .build();
     }
 
+    @Override
+    public ListFootballPitchAdminResponse getListFootballPitchAdmins(String name) {
+        List<UserEntity> listFootballPitchAdmins = userRepository.findByRoleAndName(name,KmsRole.FOOTBALL_PITCH_ROLE.getRole());
+        return ListFootballPitchAdminResponse.builder()
+                .setSuccess(true)
+                .setFootballPitchAdminS(listFootballPitchAdmins.stream()
+                        .map(fp -> getBuilder(fp))
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
     public FootballPitchAdminDTO getBuilder(UserEntity user) {
         return FootballPitchAdminDTO.builder()
                 .setUsername(user.getUsername())
@@ -249,4 +264,5 @@ public class FootballPitchAdminServiceImpl implements FootballPitchAdminService 
                         .build())
                 .build();
     }
+
 }

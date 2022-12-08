@@ -5,10 +5,13 @@ import com.backend.kmsproject.request.footballpitchadmin.UpdateFootballPitchAdmi
 import com.backend.kmsproject.response.NoContentResponse;
 import com.backend.kmsproject.response.OnlyIdResponse;
 import com.backend.kmsproject.response.footballpitchadmin.GetFootballPitchAdminResponse;
+import com.backend.kmsproject.response.footballpitchadmin.ListFootballPitchAdminResponse;
 
 public interface FootballPitchAdminService {
-    public OnlyIdResponse cerateFootballPitchAdmin(CreateFootballPitchAdminRequest request);
-    public GetFootballPitchAdminResponse getFootballPitchAdmin(Long id);
-    public OnlyIdResponse updateFootballPitchAdmin(Long id,UpdateFootballPitchAdminRequest request);
-    public NoContentResponse deleteFootballPitchAdmin(Long id);
+    OnlyIdResponse cerateFootballPitchAdmin(CreateFootballPitchAdminRequest request);
+    GetFootballPitchAdminResponse getFootballPitchAdmin(Long id);
+    OnlyIdResponse updateFootballPitchAdmin(Long id,UpdateFootballPitchAdminRequest request);
+    NoContentResponse deleteFootballPitchAdmin(Long id);
+    ListFootballPitchAdminResponse getListFootballPitchAdmins(String name);
+
 }
