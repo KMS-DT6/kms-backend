@@ -29,7 +29,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        CustomAuthenticationFilter filter = new CustomAuthenticationFilter(authenticationManagerBean(), userDetailsService, passwordEncoder);
+        CustomAuthenticationFilter filter = new CustomAuthenticationFilter(authenticationManagerBean(),
+                userDetailsService, passwordEncoder);
         filter.setFilterProcessesUrl("/api/login");
         http.csrf().disable();
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
@@ -38,9 +39,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.authorizeRequests().antMatchers("/api/my-account/**").hasAnyAuthority(KmsRole.ADMIN_ROLE.getRole(),
                 KmsRole.FOOTBALL_PITCH_ROLE.getRole(), KmsRole.CUSTOMER_ROLE.getRole());
         http.authorizeRequests().antMatchers("/api/football-pitches/**").hasAuthority(KmsRole.ADMIN_ROLE.getRole());
+        http.authorizeRequests().antMatchers("/api/sub-football-pitches/**")
+                .hasAuthority(KmsRole.FOOTBALL_PITCH_ROLE.getRole());
         http.authorizeRequests().anyRequest().authenticated();
         http.addFilter(filter);
-        http.addFilterBefore(new CustomAuthorizationFilter(userDetailsService), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(new CustomAuthorizationFilter(userDetailsService),
+                UsernamePasswordAuthenticationFilter.class);
     }
 
     @Bean
