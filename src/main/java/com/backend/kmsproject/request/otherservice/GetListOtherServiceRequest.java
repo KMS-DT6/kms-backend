@@ -8,7 +8,9 @@ import java.io.Serializable;
 @Getter
 @Setter
 public class GetListOtherServiceRequest implements Serializable {
+    private Long footballPitchId;
     private String otherServiceName;
+    private Boolean status;
     private Double from;
     private Double to;
 }

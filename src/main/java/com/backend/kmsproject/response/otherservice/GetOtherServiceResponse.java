@@ -14,5 +14,5 @@ import java.io.Serializable;
 public class GetOtherServiceResponse implements Serializable {
     private Boolean success;
     private ErrorResponse errorResponse;
-    private OtherServiceDTO subFootballPitch;
+    private OtherServiceDTO otherService;
 }
