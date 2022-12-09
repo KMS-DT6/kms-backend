@@ -10,6 +10,7 @@ import com.backend.kmsproject.repository.jpa.FootballPitchRepository;
 import com.backend.kmsproject.repository.jpa.OtherServiceRepository;
 import com.backend.kmsproject.request.otherservice.CreateUpdateOtherServiceRequest;
 import com.backend.kmsproject.request.otherservice.GetListOtherServiceRequest;
+import com.backend.kmsproject.response.ErrorResponse;
 import com.backend.kmsproject.response.NoContentResponse;
 import com.backend.kmsproject.response.OnlyIdResponse;
 import com.backend.kmsproject.response.otherservice.GetOtherServiceResponse;
@@ -66,6 +67,7 @@ public class OtherServiceImpl implements OtherService {
         builder.setPricePerOne(RequestUtils.defaultIfNull(otherService.getPricePerOne(), 0D));
         builder.setPricePerHour(RequestUtils.defaultIfNull(otherService.getPricePerHour(), 0D));
         builder.setFootballPitchId(otherService.getFootballPitch().getFootballPitchId());
+        builder.setFootballPitchName(otherService.getFootballPitch().getFootballPitchName());
         return builder.build();
     }
 
@@ -79,6 +81,9 @@ public class OtherServiceImpl implements OtherService {
         if (!errors.isEmpty()) {
             return OnlyIdResponse.builder()
                     .setSuccess(false)
+                    .setErrorResponse(ErrorResponse.builder()
+                            .setErrors(errors)
+                            .build())
                     .build();
         }
         request.setQuantity(RequestUtils.defaultIfNull(request.getQuantity(), 0));
@@ -86,6 +91,45 @@ public class OtherServiceImpl implements OtherService {
         otherService.setOtherServiceName(request.getOtherServiceName());
         FootballPitchEntity footballPitch = footballPitchRepository.findById(principal.getFootballPitchId()).get();
         otherService.setFootballPitch(footballPitch);
+        setValueForCreateUpdate(request, otherService);
+        otherService.setCreatedBy(principal.getUserId());
+        otherServiceRepository.save(otherService);
+        return OnlyIdResponse.builder()
+                .setSuccess(true)
+                .setId(otherService.getOtherServiceId())
+                .setName(otherService.getOtherServiceName())
+                .build();
+    }
+
+    @Override
+    public OnlyIdResponse updateOtherService(Long otherServiceId, CreateUpdateOtherServiceRequest request) {
+        Map<String, String> errors = new HashMap<>();
+        validFormatField(errors, request);
+        validExistField(errors, request, otherServiceId);
+        if (!errors.isEmpty()) {
+            return OnlyIdResponse.builder()
+                    .setSuccess(false)
+                    .setErrorResponse(ErrorResponse.builder()
+                            .setErrors(errors)
+                            .build())
+                    .build();
+        }
+        KmsPrincipal principal = SecurityUtils.getPrincipal();
+        OtherServiceEntity otherService = otherServiceRepository.findByOtherId(otherServiceId)
+                .orElseThrow(() -> new NotFoundException("Not found other service"));
+        setValueForCreateUpdate(request, otherService);
+        otherService.setModifiedDate(new Timestamp(System.currentTimeMillis()));
+        otherService.setModifiedBy(principal.getUserId());
+        otherServiceRepository.save(otherService);
+        return OnlyIdResponse.builder()
+                .setSuccess(true)
+                .setId(otherService.getOtherServiceId())
+                .setName(otherService.getOtherServiceName())
+                .build();
+    }
+
+    private void setValueForCreateUpdate(CreateUpdateOtherServiceRequest request, OtherServiceEntity otherService) {
+        otherService.setOtherServiceName(request.getOtherServiceName());
         otherService.setQuantity(request.getQuantity());
         otherService.setStatus(request.getQuantity() > 0 ? Boolean.TRUE : Boolean.FALSE);
         otherService.setCreatedDate(new Timestamp(System.currentTimeMillis()));
@@ -95,14 +139,6 @@ public class OtherServiceImpl implements OtherService {
         if (request.getPricePerHour() != null && request.getPricePerHour() > 0) {
             otherService.setPricePerHour(request.getPricePerHour());
         }
-        otherService.setCreatedBy(principal.getUserId());
-        otherServiceRepository.save(otherService);
-        return null;
-    }
-
-    @Override
-    public OnlyIdResponse updateOtherService(Long otherServiceId, CreateUpdateOtherServiceRequest request) {
-        return null;
     }
 
     private void validFormatField(Map<String, String> errors, CreateUpdateOtherServiceRequest request) {
@@ -121,9 +157,13 @@ public class OtherServiceImpl implements OtherService {
         }
     }
 
-
     @Override
     public NoContentResponse deleteOtherService(Long otherServiceId) {
-        return null;
+        OtherServiceEntity otherService = otherServiceRepository.findByOtherId(otherServiceId)
+                .orElseThrow(() -> new NotFoundException("Not found other service"));
+        otherServiceRepository.delete(otherService);
+        return NoContentResponse.builder()
+                .setSuccess(true)
+                .build();
     }
 }

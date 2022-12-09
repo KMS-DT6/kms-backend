@@ -15,6 +15,9 @@ public interface OtherServiceRepository extends JpaRepository<OtherServiceEntity
             " WHERE os.otherServiceId = :otherServiceId")
     Optional<OtherServiceEntity> findByOtherId(@Param("otherServiceId") Long otherServiceId);
 
+    @Query("SELECT os FROM OtherServiceEntity os" +
+            " WHERE os.footballPitch.footballPitchId = :footballPitchId" +
+            " AND os.otherServiceName = :otherServiceName")
     Optional<OtherServiceEntity> findByNameAndFootballPitchId(@Param("otherServiceName") String otherServiceName,
                                                               @Param("footballPitchId") Long footballPitchId);
 }

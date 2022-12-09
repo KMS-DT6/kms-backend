@@ -32,21 +32,30 @@ public class OtherServiceController {
     @GetMapping
     public Response<ListDTO<OtherServiceDTO>> getListOtherService(@ModelAttribute @Valid GetListOtherServiceRequest request) {
         ListOtherServiceResponse response = otherService.getListOtherService(request);
-        return null;
+        if (response.getSuccess()) {
+            return otherServiceConverter.getSuccess(response);
+        }
+        return otherServiceConverter.getError(response.getErrorResponse());
     }
 
     @Operation(summary = "Get Other Service")
     @GetMapping("/{id}")
     public Response<OtherServiceDTO> getOtherService(@PathVariable("id") Long otherServiceId) {
         GetOtherServiceResponse response = otherService.getOtherService(otherServiceId);
-        return null;
+        if (response.getSuccess()) {
+            return otherServiceConverter.getSuccess(response);
+        }
+        return otherServiceConverter.getError(response.getErrorResponse());
     }
 
     @Operation(summary = "Create Other Service")
     @PostMapping
     public Response<OnlyIdDTO> createOtherService(@RequestBody CreateUpdateOtherServiceRequest request) {
         OnlyIdResponse response = otherService.createOtherService(request);
-        return null;
+        if (response.getSuccess()) {
+            return otherServiceConverter.getSuccess(response);
+        }
+        return otherServiceConverter.getError(response.getErrorResponse());
     }
 
     @Operation(summary = "Update Other Service")
@@ -54,13 +63,16 @@ public class OtherServiceController {
     public Response<OnlyIdDTO> updateOtherService(@PathVariable("id") Long otherServiceId,
                                                   @RequestBody CreateUpdateOtherServiceRequest request) {
         OnlyIdResponse response = otherService.updateOtherService(otherServiceId, request);
-        return null;
+        if (response.getSuccess()) {
+            return otherServiceConverter.getSuccess(response);
+        }
+        return otherServiceConverter.getError(response.getErrorResponse());
     }
 
     @Operation(summary = "Delete Other Service")
     @DeleteMapping("/{id}")
     public Response<NoContentDTO> deleteOtherService(@PathVariable("id") Long otherServiceId) {
         NoContentResponse response = otherService.deleteOtherService(otherServiceId);
-        return null;
+        return otherServiceConverter.getSuccess(response);
     }
 }

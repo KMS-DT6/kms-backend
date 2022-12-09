@@ -8,7 +8,6 @@ import java.io.Serializable;
 
 @Getter
 @Setter
-@Builder(setterPrefix = "set")
 public class CreateUpdateSubFootballPitchRequest implements Serializable {
     private String subFootballPitchName;
     private Long footballPitchId;
