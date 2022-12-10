@@ -24,7 +24,7 @@ public class BookingEntity implements Serializable {
     private UserEntity customer;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subfootballpitchid")
-    private SubFootballPitchEntity subFootballPitchId;
+    private SubFootballPitchEntity subFootballPitch;
     @Column(name = "bookday")
     private LocalDate bookDay;
     @Column(name = "timestart")
@@ -32,7 +32,7 @@ public class BookingEntity implements Serializable {
     @Column(name = "timeend")
     private LocalTime timeEnd;
     @Column(name = "totalprice")
-    private LocalTime totalPrice;
+    private Double totalPrice;
     @Column(name = "ispaid")
     private Boolean isPaid;
     @Column(name = "status")

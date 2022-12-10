@@ -5,18 +5,23 @@ import com.backend.kmsproject.common.constants.KmsConstant;
 import com.backend.kmsproject.common.enums.KmsRole;
 import com.backend.kmsproject.common.exception.NotFoundException;
 import com.backend.kmsproject.mapper.UserMapper;
-import com.backend.kmsproject.model.entity.AddressEntity;
-import com.backend.kmsproject.model.entity.UserEntity;
+import com.backend.kmsproject.model.dto.HistoryBookingDTO;
+import com.backend.kmsproject.model.entity.*;
+import com.backend.kmsproject.repository.dsl.BookingDslRepository;
 import com.backend.kmsproject.repository.jpa.AddressRepository;
+import com.backend.kmsproject.repository.jpa.BookingOtherServiceRepository;
 import com.backend.kmsproject.repository.jpa.UserRepository;
 import com.backend.kmsproject.request.myaccount.ChangePasswordRequest;
+import com.backend.kmsproject.request.myaccount.GetListHistoryBookingRequest;
 import com.backend.kmsproject.request.myaccount.UpdateMyAccountRequest;
 import com.backend.kmsproject.response.ErrorResponse;
 import com.backend.kmsproject.response.NoContentResponse;
 import com.backend.kmsproject.response.OnlyIdResponse;
+import com.backend.kmsproject.response.booking.ListHistoryBookingResponse;
 import com.backend.kmsproject.response.user.MyAccountResponse;
 import com.backend.kmsproject.security.KmsPrincipal;
 import com.backend.kmsproject.service.MyAccountService;
+import com.backend.kmsproject.util.DatetimeUtils;
 import com.backend.kmsproject.util.RequestUtils;
 import com.backend.kmsproject.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -25,13 +30,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.sql.Timestamp;
+import java.time.Duration;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class MyAccountServiceImpl implements MyAccountService {
     private final UserRepository userRepository;
     private final AddressRepository addressRepository;
+    private final BookingOtherServiceRepository bookingOtherServiceRepository;
+    private final BookingDslRepository bookingDslRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -132,12 +141,82 @@ public class MyAccountServiceImpl implements MyAccountService {
                 .build();
     }
 
-    public void validFormatPassword(Map<String, String> errors, String keyPassword, String valuePassword) {
+    @Override
+    public ListHistoryBookingResponse getListHistoryBooking(GetListHistoryBookingRequest request) {
+        KmsPrincipal principal = SecurityUtils.getPrincipal();
+        List<HistoryBookingDTO> historyBookings = new ArrayList<>();
+        List<BookingEntity> bookings = bookingDslRepository.listBookingByUserId(request, principal.getUserId());
+        bookings.forEach(b -> {
+            List<BookingOtherServiceEntity> bookingOtherServices = bookingOtherServiceRepository.findByBookingId(b.getBookingId());
+            historyBookings.add(toBuilder(b, bookingOtherServices));
+        });
+        return ListHistoryBookingResponse.builder()
+                .setSuccess(true)
+                .setHistoryBookings(historyBookings)
+                .build();
+    }
+
+    private HistoryBookingDTO toBuilder(BookingEntity booking, List<BookingOtherServiceEntity> bookingOtherServices) {
+        HistoryBookingDTO.HistoryBookingDTOBuilder builder = HistoryBookingDTO.builder();
+        builder.setBookingId(booking.getBookingId())
+                .setStatus(Boolean.TRUE.equals(booking.getStatus()) ? Boolean.TRUE : Boolean.FALSE)
+                .setIsPaid(Boolean.TRUE.equals(booking.getIsPaid()) ? Boolean.TRUE : Boolean.FALSE)
+                .setBookDate(DatetimeUtils.formatLocalDate(booking.getBookDay()))
+                .setTimeStart(DatetimeUtils.formatLocalTime(booking.getTimeStart()))
+                .setTimeEnd(DatetimeUtils.formatLocalTime(booking.getTimeEnd()))
+                .setPricePitch(booking.getSubFootballPitch().getPricePerHour())
+                .setTotalPriceIncludeService(totalPriceIncludeOtherService(booking, bookingOtherServices))
+                .setFootballPitch(HistoryBookingDTO.FootballPitch.builder()
+                        .setFootballPitchName(booking.getSubFootballPitch().getFootballPitch().getFootballPitchName())
+                        .setSubFootballPitchName(booking.getSubFootballPitch().getSubFootballPitchName())
+                        .setAddress(HistoryBookingDTO.FootballPitch.Address.builder()
+                                .setAddress(booking.getSubFootballPitch().getFootballPitch().getAddress() != null ?
+                                        booking.getSubFootballPitch().getFootballPitch().getAddress().getAddress() : "")
+                                .setDistrict(booking.getSubFootballPitch().getFootballPitch().getAddress() != null ?
+                                        booking.getSubFootballPitch().getFootballPitch().getAddress().getDistrict() : "")
+                                .setCity(booking.getSubFootballPitch().getFootballPitch().getAddress() != null ?
+                                        booking.getSubFootballPitch().getFootballPitch().getAddress().getCity() : "")
+                                .build())
+                        .build())
+                .setOtherService(HistoryBookingDTO.OtherService.builder()
+                        .setTotalPriceOtherService(totalPriceOtherService(bookingOtherServices))
+                        .setTotalItems(bookingOtherServices.size())
+                        .setItems(bookingOtherServices.stream()
+                                .map(bos -> HistoryBookingDTO.OtherService.Item.builder()
+                                        .setName(bos.getOtherService().getOtherServiceName())
+                                        .setPrice(bos.getOtherService().getPricePerHour() != null ? bos.getOtherService().getPricePerHour()
+                                                : bos.getOtherService().getPricePerOne())
+                                        .setQuantity(bos.getQuantity())
+                                        .build())
+                                .collect(Collectors.toList()))
+                        .build());
+        ;
+        return builder.build();
+    }
+
+    private Double totalPriceOtherService(List<BookingOtherServiceEntity> bookingOtherServices) {
+        Double totalPrice = 0D;
+        for (BookingOtherServiceEntity bookingOtherService : bookingOtherServices) {
+            totalPrice += bookingOtherService.getOtherService().getPricePerHour() != null ? bookingOtherService.getOtherService().getPricePerHour()
+                    : bookingOtherService.getOtherService().getPricePerOne();
+            if (bookingOtherService.getOtherService().getPricePerOne() != null) {
+                totalPrice = totalPrice * bookingOtherService.getQuantity();
+            }
+        }
+        return totalPrice;
+    }
+
+    private Double totalPriceIncludeOtherService(BookingEntity booking, List<BookingOtherServiceEntity> bookingOtherServices) {
+        int hours = (int) Duration.between(booking.getTimeStart(), booking.getTimeEnd()).toHours();
+        return booking.getSubFootballPitch().getPricePerHour() * hours + totalPriceOtherService(bookingOtherServices);
+    }
+
+    private void validFormatPassword(Map<String, String> errors, String keyPassword, String valuePassword) {
         if (!StringUtils.hasText(valuePassword)) {
             errors.put(keyPassword, ErrorCode.MISSING_VALUE.name());
         } else if (valuePassword.length() < KmsConstant.PASSWORD_MIN_SIZE) {
             errors.put(keyPassword, ErrorCode.TOO_SHORT.name());
-        } else if (valuePassword.length() > KmsConstant.PASSWORD_MAX_SIZE){
+        } else if (valuePassword.length() > KmsConstant.PASSWORD_MAX_SIZE) {
             errors.put(keyPassword, ErrorCode.TOO_LONG.name());
         }
     }
