@@ -39,25 +39,9 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     Boolean selectExistsUserName(String username);
 
     @Query("SELECT DISTINCT u FROM UserEntity u" +
-            " LEFT JOIN FETCH u.address a"+
-            " LEFT JOIN FETCH u.footballPitch f"+
-            " LEFT JOIN FETCH u.role r"+
+            " LEFT JOIN FETCH u.address a" +
+            " LEFT JOIN FETCH u.footballPitch f" +
+            " LEFT JOIN FETCH u.role r" +
             " WHERE u.userId=:id AND r.roleName = :role")
-    Optional<UserEntity> findByIdAndRole(@Param("id") Long id,@Param("role") String role);
-
-    @Query("SELECT u FROM UserEntity u"+
-            " LEFT JOIN FETCH u.address a"+
-            " LEFT JOIN FETCH u.footballPitch f"+
-            " LEFT JOIN FETCH u.role r"+
-            " WHERE r.roleName = :role"+
-            " AND LOWER(CONCAT(u.firstName,' ',u.lastName)) LIKE LOWER(CONCAT('%',:name,'%'))")
-    List<UserEntity> findByRoleAndName(@Param("name") String name,@Param("role") String role);
-
-    @Query("SELECT u FROM UserEntity u"+
-            " LEFT JOIN FETCH u.address a"+
-            " LEFT JOIN FETCH u.footballPitch f"+
-            " LEFT JOIN FETCH u.role r"+
-            " WHERE r.roleName = :role AND u.footballPitch.footballPitchId = :footballPitchId"+
-            " AND LOWER(CONCAT(u.firstName,' ',u.lastName)) LIKE lower(CONCAT('%',:name,'%'))")
-    List<UserEntity> findByRoleAndName(@Param("name") String name,@Param("role") String role,@Param("footballPitchId") Long footballPitchId);
+    Optional<UserEntity> findByIdAndRole(@Param("id") Long id, @Param("role") String role);
 }
