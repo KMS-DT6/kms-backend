@@ -28,6 +28,8 @@ public class OtherServiceEntity implements Serializable {
     private FootballPitchEntity footballPitch;
     @Column(name = "status")
     private Boolean status;
+    @Column(name = "quantity")
+    private Integer quantity;
     @Column(name = "createddate")
     private Timestamp createdDate;
     @Column(name = "modifieddate")

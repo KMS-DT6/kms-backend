@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -28,4 +29,27 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     @Query("SELECT u FROM UserEntity u" +
             " WHERE u.phoneNumber = :phoneNumber")
     Optional<UserEntity> findByPhoneNumber(@Param("phoneNumber") String phoneNumber);
+
+    @Query("" +
+            "SELECT CASE WHEN COUNT(s) > 0 THEN " +
+            "TRUE ELSE FALSE END " +
+            "FROM UserEntity s " +
+            "WHERE s.username = ?1"
+    )
+    Boolean selectExistsUserName(String username);
+
+    @Query("SELECT DISTINCT u FROM UserEntity u" +
+            " LEFT JOIN FETCH u.address a"+
+            " LEFT JOIN FETCH u.footballPitch f"+
+            " LEFT JOIN FETCH u.role r"+
+            " WHERE u.userId=:id AND r.roleName = :role")
+    Optional<UserEntity> findByIdAndRole(@Param("id") Long id,@Param("role") String role);
+
+    @Query("SELECT u FROM UserEntity u"+
+            " LEFT JOIN FETCH u.address a"+
+            " LEFT JOIN FETCH u.footballPitch f"+
+            " LEFT JOIN FETCH u.role r"+
+            " WHERE r.roleName = :role"+
+            " AND CONCAT(u.firstName,' ',u.lastName) LIKE CONCAT('%',:name,'%')")
+    List<UserEntity> findByRoleAndName(@Param("name") String name,@Param("role") String role);
 }
