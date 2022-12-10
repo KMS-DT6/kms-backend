@@ -22,7 +22,7 @@ public class UserDslRepository {
     public List<UserEntity> listFootballPitchAdmin(GetListFootballPitchAdminRequest request) {
         JPAQuery<UserEntity> query = queryFactory.select(user)
                 .from(user)
-                .where(user.userId.eq(KmsRole.FOOTBALL_PITCH_ROLE.getRoleId()));
+                .where(user.role.roleId.eq(KmsRole.FOOTBALL_PITCH_ROLE.getRoleId()));
         if (request.getFootballPitchId() != null && request.getFootballPitchId() > 0) {
             query.where(user.footballPitch.footballPitchId.eq(request.getFootballPitchId()));
         }
