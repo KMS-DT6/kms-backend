@@ -50,6 +50,14 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
             " LEFT JOIN FETCH u.footballPitch f"+
             " LEFT JOIN FETCH u.role r"+
             " WHERE r.roleName = :role"+
-            " AND CONCAT(u.firstName,' ',u.lastName) LIKE CONCAT('%',:name,'%')")
+            " AND LOWER(CONCAT(u.firstName,' ',u.lastName)) LIKE LOWER(CONCAT('%',:name,'%'))")
     List<UserEntity> findByRoleAndName(@Param("name") String name,@Param("role") String role);
+
+    @Query("SELECT u FROM UserEntity u"+
+            " LEFT JOIN FETCH u.address a"+
+            " LEFT JOIN FETCH u.footballPitch f"+
+            " LEFT JOIN FETCH u.role r"+
+            " WHERE r.roleName = :role AND u.footballPitch.footballPitchId = :footballPitchId"+
+            " AND LOWER(CONCAT(u.firstName,' ',u.lastName)) LIKE lower(CONCAT('%',:name,'%'))")
+    List<UserEntity> findByRoleAndName(@Param("name") String name,@Param("role") String role,@Param("footballPitchId") Long footballPitchId);
 }

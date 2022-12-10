@@ -12,6 +12,6 @@ public interface FootballPitchAdminService {
     GetFootballPitchAdminResponse getFootballPitchAdmin(Long id);
     OnlyIdResponse updateFootballPitchAdmin(Long id,UpdateFootballPitchAdminRequest request);
     NoContentResponse deleteFootballPitchAdmin(Long id);
-    ListFootballPitchAdminResponse getListFootballPitchAdmins(String name);
+    ListFootballPitchAdminResponse getListFootballPitchAdmins(String name,Long footballPitchId);
 
 }

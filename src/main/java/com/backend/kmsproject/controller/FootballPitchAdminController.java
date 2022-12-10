@@ -47,7 +47,7 @@ public class FootballPitchAdminController {
         return footballPitchAdminConverter.getError(response.getErrorResponse());
     }
 
-    @Operation(summary = "Update Football Pitch Amdin")
+    @Operation(summary = "Update FootballPitch Amdin")
     @PutMapping("/{id}")
     public Response<OnlyIdDTO> updateFootballPitchAdmin(@PathVariable("id") Long footballPitchAdminId,
                                                    @RequestBody UpdateFootballPitchAdminRequest request) {
@@ -58,7 +58,7 @@ public class FootballPitchAdminController {
         return footballPitchAdminConverter.getError(response.getErrorResponse());
     }
 
-    @Operation(summary = "Delete Football Pitch Admin")
+    @Operation(summary = "Delete FootballPitch Admin")
     @DeleteMapping("/{id}")
     public Response<NoContentDTO> deleteFootballPitchAdmin(@PathVariable("id") Long footballPitchAdminId) {
         NoContentResponse response = footballPitchAdminService.deleteFootballPitchAdmin(footballPitchAdminId);
@@ -68,10 +68,11 @@ public class FootballPitchAdminController {
         return footballPitchAdminConverter.getError(response.getErrorResponse());
     }
 
-    @Operation(summary = "Get List Football Pitch Admin")
+    @Operation(summary = "Get List FootballPitch Admin")
     @GetMapping
-    public Response<ListDTO<FootballPitchAdminDTO>> getListFootballPitchAdmin(@RequestParam(required = false, defaultValue = "") String footBallPitchAdminName) {
-        ListFootballPitchAdminResponse response = footballPitchAdminService.getListFootballPitchAdmins(footBallPitchAdminName);
+    public Response<ListDTO<FootballPitchAdminDTO>> getListFootballPitchAdmin(@RequestParam(required = false, defaultValue = "") String footballPitchAdminName,
+                                                                              @RequestParam(required = false, defaultValue = "") Long footballPitchId) {
+        ListFootballPitchAdminResponse response = footballPitchAdminService.getListFootballPitchAdmins(footballPitchAdminName,footballPitchId);
         if (response.getSuccess()) {
             return footballPitchAdminConverter.getSuccess(response);
         }

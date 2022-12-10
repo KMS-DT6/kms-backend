@@ -228,8 +228,16 @@ public class FootballPitchAdminServiceImpl implements FootballPitchAdminService 
     }
 
     @Override
-    public ListFootballPitchAdminResponse getListFootballPitchAdmins(String name) {
-        List<UserEntity> listFootballPitchAdmins = userRepository.findByRoleAndName(name,KmsRole.FOOTBALL_PITCH_ROLE.getRole());
+    public ListFootballPitchAdminResponse getListFootballPitchAdmins(String name, Long footballPitchId) {
+        List<UserEntity> listFootballPitchAdmins;
+        if(footballPitchId == null){
+            listFootballPitchAdmins = userRepository.findByRoleAndName(name,KmsRole.FOOTBALL_PITCH_ROLE.getRole());
+        } else {
+            FootballPitchEntity footballPitch = footballPitchRepository.findById(footballPitchId)
+                    .orElseThrow(() -> new NotFoundException("Not Found footballPitchId"));
+            listFootballPitchAdmins = userRepository.findByRoleAndName(name,KmsRole.FOOTBALL_PITCH_ROLE.getRole(),footballPitchId);
+        }
+
         return ListFootballPitchAdminResponse.builder()
                 .setSuccess(true)
                 .setFootballPitchAdminS(listFootballPitchAdmins.stream()
