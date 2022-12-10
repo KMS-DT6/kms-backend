@@ -14,6 +14,7 @@ import com.backend.kmsproject.common.constants.ErrorCode;
 import com.backend.kmsproject.common.exception.NotFoundException;
 import com.backend.kmsproject.model.dto.AddressDTO;
 import com.backend.kmsproject.model.dto.FootballPitchDTO;
+import com.backend.kmsproject.model.dto.SubFootballPitchDTO;
 import com.backend.kmsproject.model.entity.AddressEntity;
 import com.backend.kmsproject.model.entity.FootballPitchEntity;
 import com.backend.kmsproject.repository.dsl.FootballPitchDslRepository;
@@ -50,19 +51,44 @@ public class SubFootballServiceImpl implements SubFootballPitchService {
 
     @Override
     public ListSubFootballPitchResponse getListSubFootballPitch(GetListSubFootballPitchRequest request) {
-        return null;
+        KmsPrincipal principal = SecurityUtils.getPrincipal();
+        List<SubFootballPitchEntity> listSubFootballPitch = subFootballPitchRepository
+                .getListSubFootballPitch(principal.getFootballPitchId());
+        return ListSubFootballPitchResponse.builder()
+                .setSuccess(true)
+                .setSubFootballPitches(listSubFootballPitch.stream()
+                        .map(os -> toBuilder(os))
+                        .collect(Collectors.toList()))
+                .build();
     }
 
     @Override
     public GetSubFootballPitchResponse getSubFootballPitch(Long subFootballPitchId) {
-        return null;
+        SubFootballPitchEntity subFootballPitch = subFootballPitchRepository.findById(subFootballPitchId)
+                .orElseThrow(() -> new NotFoundException("Not found subFootballPitch"));
+        return GetSubFootballPitchResponse.builder()
+                .setSuccess(true)
+                .setSubFootballPitch(toBuilder(subFootballPitch))
+                .build();
+    }
+
+    private SubFootballPitchDTO toBuilder(SubFootballPitchEntity subFootballPitch) {
+        SubFootballPitchDTO.SubFootballPitchDTOBuilder builder = SubFootballPitchDTO.builder();
+        builder.setSubFootballPitchId(subFootballPitch.getSubFootBallPitchId());
+        builder.setSubFootballPitchName(subFootballPitch.getSubFootballPitchName());
+        builder.setPricePerHour(RequestUtils.defaultIfNull(subFootballPitch.getPricePerHour(), 0D));
+        builder.setSize(RequestUtils.defaultIfNull(subFootballPitch.getSize(), 0));
+        builder.setStatus(RequestUtils.defaultIfNull(subFootballPitch.getStatus(), Boolean.FALSE));
+        builder.setImage(subFootballPitch.getImage());
+        builder.setFootballPitchId(subFootballPitch.getFootballPitch().getFootballPitchId());
+        return builder.build();
     }
 
     @Override
     public OnlyIdResponse createSubFootballPitch(CreateUpdateSubFootballPitchRequest request) {
         Map<String, String> errors = new HashMap<>();
-//        validFormatField(errors, request);
-//        validExistField(errors, request.getFootballPitchId(), null);
+        validFormatField(errors, request);
+        // validExistField(errors, request.getFootballPitchId(), null);
         if (!errors.isEmpty()) {
             return OnlyIdResponse.builder()
                     .setSuccess(false)
@@ -77,6 +103,7 @@ public class SubFootballServiceImpl implements SubFootballPitchService {
         subFootballPitch.setFootballPitch(footballPitchRepository.findById(principal.getFootballPitchId()).get());
         subFootballPitch.setSize(request.getSize());
         subFootballPitch.setPricePerHour(request.getPricePerHour());
+        subFootballPitch.setStatus(Boolean.FALSE);
         subFootballPitch.setImage(RequestUtils.blankIfNull(request.getImage()));
 
         subFootballPitch.setCreatedBy(principal.getUserId());
@@ -104,14 +131,9 @@ public class SubFootballServiceImpl implements SubFootballPitchService {
 
     }
 
-    public void validExistField(Map<String, String> errors, Long footballPitchId, String username) {
-//        if (footballPitchId != null) {
-//            Optional<FootballPitchEntity> footballPitch = footballPitchRepository.findById(footballPitchId);
-//            if (footballPitch.isEmpty()) {
-//                errors.put("footballPitchId", ErrorCode.MISSING_VALUE.name());
-//            }
-//        }
-        // if(StringUtils.hasText(username)){
+    public void validExistField(Map<String, String> errors, CreateUpdateSubFootballPitchRequest request) {
+
+        // if(StringUtils.hasText(request.getSubFootballPitchName())){
         // Boolean existsUser = userRepository.selectExistsUserName(username);
         // if(existsUser){
         // errors.put("username", ErrorCode.ALREADY_EXIST.name());
@@ -121,11 +143,45 @@ public class SubFootballServiceImpl implements SubFootballPitchService {
 
     @Override
     public OnlyIdResponse updateSubFootballPitch(Long subFootballPitchId, CreateUpdateSubFootballPitchRequest request) {
-        return null;
+        Map<String, String> errors = new HashMap<>();
+        validFormatField(errors, request);
+        // validExistField(errors, request, otherServiceId);
+        if (!errors.isEmpty()) {
+            return OnlyIdResponse.builder()
+                    .setSuccess(false)
+                    .setErrorResponse(ErrorResponse.builder()
+                            .setErrors(errors)
+                            .build())
+                    .build();
+        }
+        KmsPrincipal principal = SecurityUtils.getPrincipal();
+        SubFootballPitchEntity subFootballPitch = subFootballPitchRepository.findById(subFootballPitchId)
+                .orElseThrow(() -> new NotFoundException("Not found sub football pitch"));
+        subFootballPitch.setSubFootballPitchName(request.getSubFootballPitchName());
+
+        subFootballPitch.setSize(RequestUtils.defaultIfNull(request.getSize(), 0));
+        subFootballPitch.setPricePerHour(RequestUtils.defaultIfNull(request.getPricePerHour(), 0D));
+        subFootballPitch.setImage(RequestUtils.blankIfNull(request.getImage()));
+
+        subFootballPitch.setCreatedBy(principal.getUserId());
+        subFootballPitch.setCreatedDate(new Timestamp(System.currentTimeMillis()));
+
+        subFootballPitchRepository.save(subFootballPitch);
+        return OnlyIdResponse.builder()
+                .setSuccess(true)
+                .setId(subFootballPitch.getSubFootBallPitchId())
+                .setName(subFootballPitch.getSubFootballPitchName())
+                .build();
+
     }
 
     @Override
     public NoContentResponse deleteSubFootballPitch(Long subFootballPitchId) {
-        return null;
+        SubFootballPitchEntity subFootballPitch = subFootballPitchRepository.findById(subFootballPitchId)
+                .orElseThrow(() -> new NotFoundException("Not found subfootballpitch"));
+        subFootballPitchRepository.delete(subFootballPitch);
+        return NoContentResponse.builder()
+                .setSuccess(true)
+                .build();
     }
 }

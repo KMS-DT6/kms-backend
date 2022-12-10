@@ -12,10 +12,11 @@ import java.io.Serializable;
 public class SubFootballPitchDTO implements Serializable {
     private Long subFootballPitchId;
     private String subFootballPitchName;
-    private FootballPitch footballPitch;
+    private Long footballPitchId;
     private Integer size;
     private Boolean status;
     private Double pricePerHour;
+    private String image;
 
     @Getter
     @Setter
