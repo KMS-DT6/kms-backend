@@ -39,7 +39,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.authorizeRequests().antMatchers("/api/my-account/**").hasAnyAuthority(KmsRole.ADMIN_ROLE.getRole(),
                 KmsRole.FOOTBALL_PITCH_ROLE.getRole(), KmsRole.CUSTOMER_ROLE.getRole());
         http.authorizeRequests().antMatchers("/api/football-pitches/**").hasAuthority(KmsRole.ADMIN_ROLE.getRole());
-        http.authorizeRequests().antMatchers("/api/footballpitch-admin/**").hasAuthority(KmsRole.ADMIN_ROLE.getRole());
+        http.authorizeRequests().antMatchers("/api/football-pitch-admins/**").hasAuthority(KmsRole.ADMIN_ROLE.getRole());
+        http.authorizeRequests().antMatchers("/api/other-services/**").hasAuthority(KmsRole.FOOTBALL_PITCH_ROLE.getRole());
         http.authorizeRequests().anyRequest().authenticated();
         http.addFilter(filter);
         http.addFilterBefore(new CustomAuthorizationFilter(userDetailsService), UsernamePasswordAuthenticationFilter.class);
