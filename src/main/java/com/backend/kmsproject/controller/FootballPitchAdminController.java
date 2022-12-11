@@ -5,8 +5,8 @@ import com.backend.kmsproject.model.dto.FootballPitchAdminDTO;
 import com.backend.kmsproject.model.dto.common.ListDTO;
 import com.backend.kmsproject.model.dto.common.NoContentDTO;
 import com.backend.kmsproject.model.dto.common.OnlyIdDTO;
-import com.backend.kmsproject.request.footballpitchadmin.CreateFootballPitchAdminRequest;
-import com.backend.kmsproject.request.footballpitchadmin.UpdateFootballPitchAdminRequest;
+import com.backend.kmsproject.request.footballpitchadmin.CreateUpdateFootballPitchAdminRequest;
+import com.backend.kmsproject.request.footballpitchadmin.GetListFootballPitchAdminRequest;
 import com.backend.kmsproject.response.NoContentResponse;
 import com.backend.kmsproject.response.OnlyIdResponse;
 import com.backend.kmsproject.response.Response;
@@ -17,6 +17,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
 
 @Tag(name = "Football Pitch Admin", description = "Football Pitch Admin APIs")
 @RestController
@@ -29,8 +31,8 @@ public class FootballPitchAdminController {
 
     @Operation(summary = "Create FootballPitch Admin")
     @PostMapping
-    public Response<OnlyIdDTO> createFootballPitch(@RequestBody CreateFootballPitchAdminRequest request) {
-        OnlyIdResponse response = footballPitchAdminService.cerateFootballPitchAdmin(request);
+    public Response<OnlyIdDTO> createFootballPitch(@RequestBody CreateUpdateFootballPitchAdminRequest request) {
+        OnlyIdResponse response = footballPitchAdminService.createFootballPitchAdmin(request);
         if (response.getSuccess()) {
             return footballPitchAdminConverter.getSuccess(response);
         }
@@ -47,10 +49,10 @@ public class FootballPitchAdminController {
         return footballPitchAdminConverter.getError(response.getErrorResponse());
     }
 
-    @Operation(summary = "Update Football Pitch Amdin")
+    @Operation(summary = "Update FootballPitch Admin")
     @PutMapping("/{id}")
     public Response<OnlyIdDTO> updateFootballPitchAdmin(@PathVariable("id") Long footballPitchAdminId,
-                                                   @RequestBody UpdateFootballPitchAdminRequest request) {
+                                                        @RequestBody CreateUpdateFootballPitchAdminRequest request) {
         OnlyIdResponse response = footballPitchAdminService.updateFootballPitchAdmin(footballPitchAdminId, request);
         if (response.getSuccess()) {
             return footballPitchAdminConverter.getSuccess(response);
@@ -58,7 +60,7 @@ public class FootballPitchAdminController {
         return footballPitchAdminConverter.getError(response.getErrorResponse());
     }
 
-    @Operation(summary = "Delete Football Pitch Admin")
+    @Operation(summary = "Delete FootballPitch Admin")
     @DeleteMapping("/{id}")
     public Response<NoContentDTO> deleteFootballPitchAdmin(@PathVariable("id") Long footballPitchAdminId) {
         NoContentResponse response = footballPitchAdminService.deleteFootballPitchAdmin(footballPitchAdminId);
@@ -68,10 +70,10 @@ public class FootballPitchAdminController {
         return footballPitchAdminConverter.getError(response.getErrorResponse());
     }
 
-    @Operation(summary = "Get List Football Pitch Admin")
+    @Operation(summary = "Get List FootballPitch Admin")
     @GetMapping
-    public Response<ListDTO<FootballPitchAdminDTO>> getListFootballPitchAdmin(@RequestParam(required = false, defaultValue = "") String footBallPitchAdminName) {
-        ListFootballPitchAdminResponse response = footballPitchAdminService.getListFootballPitchAdmins(footBallPitchAdminName);
+    public Response<ListDTO<FootballPitchAdminDTO>> getListFootballPitchAdmin(@ModelAttribute @Valid GetListFootballPitchAdminRequest request) {
+        ListFootballPitchAdminResponse response = footballPitchAdminService.getListFootballPitchAdmin(request);
         if (response.getSuccess()) {
             return footballPitchAdminConverter.getSuccess(response);
         }

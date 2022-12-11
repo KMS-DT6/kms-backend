@@ -3,9 +3,11 @@ package com.backend.kmsproject.request.footballpitchadmin;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
+
 @Getter
 @Setter
-public class CreateFootballPitchAdminRequest {
+public class CreateUpdateFootballPitchAdminRequest implements Serializable {
     private Long footballPitchId;
     private String address;
     private String district;
