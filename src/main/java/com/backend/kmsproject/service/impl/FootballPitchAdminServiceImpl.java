@@ -1,21 +1,22 @@
 package com.backend.kmsproject.service.impl;
 
 import com.backend.kmsproject.common.constants.ErrorCode;
+import com.backend.kmsproject.common.constants.KmsConstant;
 import com.backend.kmsproject.common.enums.KmsRole;
 import com.backend.kmsproject.common.exception.NotFoundException;
 import com.backend.kmsproject.model.dto.AddressDTO;
 import com.backend.kmsproject.model.dto.FootballPitchAdminDTO;
 import com.backend.kmsproject.model.dto.FootballPitchDTO;
 import com.backend.kmsproject.model.entity.AddressEntity;
-import com.backend.kmsproject.model.entity.FootballPitchEntity;
 import com.backend.kmsproject.model.entity.RoleEntity;
 import com.backend.kmsproject.model.entity.UserEntity;
+import com.backend.kmsproject.repository.dsl.UserDslRepository;
 import com.backend.kmsproject.repository.jpa.AddressRepository;
 import com.backend.kmsproject.repository.jpa.FootballPitchRepository;
 import com.backend.kmsproject.repository.jpa.RoleRepository;
 import com.backend.kmsproject.repository.jpa.UserRepository;
-import com.backend.kmsproject.request.footballpitchadmin.CreateFootballPitchAdminRequest;
-import com.backend.kmsproject.request.footballpitchadmin.UpdateFootballPitchAdminRequest;
+import com.backend.kmsproject.request.footballpitchadmin.CreateUpdateFootballPitchAdminRequest;
+import com.backend.kmsproject.request.footballpitchadmin.GetListFootballPitchAdminRequest;
 import com.backend.kmsproject.response.ErrorResponse;
 import com.backend.kmsproject.response.NoContentResponse;
 import com.backend.kmsproject.response.OnlyIdResponse;
@@ -50,19 +51,25 @@ public class FootballPitchAdminServiceImpl implements FootballPitchAdminService 
     private final AddressRepository addressRepository;
 
     private final RoleRepository roleRepository;
+    private final UserDslRepository userDslRepository;
 
-    public void validFormatField(Map<String, String> errors, CreateFootballPitchAdminRequest request) {
+    public void validFormatField(Map<String, String> errors, CreateUpdateFootballPitchAdminRequest request) {
         if (!StringUtils.hasText(request.getUsername())) {
             errors.put("username", ErrorCode.MISSING_VALUE.name());
-        }
-        if (!StringUtils.hasText(request.getAddress())) {
-            errors.put("address", ErrorCode.MISSING_VALUE.name());
+        } else if (request.getUsername().length() > KmsConstant.USERNAME_MAX_SIZE) {
+            errors.put("username", ErrorCode.TOO_LONG.name());
+        } else if (request.getUsername().length() < KmsConstant.USERNAME_MIN_SIZE) {
+            errors.put("username", ErrorCode.TOO_SHORT.name());
         }
         if (!StringUtils.hasText(request.getPhoneNumber())) {
             errors.put("phone", ErrorCode.MISSING_VALUE.name());
         }
         if (!StringUtils.hasText(request.getPassword())) {
             errors.put("password", ErrorCode.MISSING_VALUE.name());
+        } else if (request.getPassword().length() > KmsConstant.PASSWORD_MAX_SIZE) {
+            errors.put("password", ErrorCode.TOO_LONG.name());
+        } else if (request.getUsername().length() < KmsConstant.PASSWORD_MIN_SIZE) {
+            errors.put("password", ErrorCode.TOO_SHORT.name());
         }
         if (!StringUtils.hasText(request.getFirstName())) {
             errors.put("firstName", ErrorCode.MISSING_VALUE.name());
@@ -72,50 +79,25 @@ public class FootballPitchAdminServiceImpl implements FootballPitchAdminService 
         }
         if (request.getFootballPitchId() == null) {
             errors.put("footballPitchId", ErrorCode.MISSING_VALUE.name());
+        } else if (request.getFootballPitchId() < 0) {
+            errors.put("footballPitchId", ErrorCode.INVALID_VALUE.name());
         }
     }
 
-    public void validFormatFieldForUpdate(Map<String, String> errors, UpdateFootballPitchAdminRequest request) {
-        if (!StringUtils.hasText(request.getAddress())) {
-            errors.put("address", ErrorCode.MISSING_VALUE.name());
-        }
-        if (!StringUtils.hasText(request.getPhoneNumber())) {
-            errors.put("phone", ErrorCode.MISSING_VALUE.name());
-        }
-        if (!StringUtils.hasText(request.getFirstName())) {
-            errors.put("firstName", ErrorCode.MISSING_VALUE.name());
-        }
-        if (!StringUtils.hasText(request.getLastName())) {
-            errors.put("lastName", ErrorCode.MISSING_VALUE.name());
-        }
-        if (request.getFootballPitchId() == null) {
-            errors.put("footballPitchId", ErrorCode.MISSING_VALUE.name());
-        }
-    }
-
-    public void validExistFieldUserName(Map<String, String> errors, String username) {
-        if(StringUtils.hasText(username)){
-            Boolean existsUser = userRepository.selectExistsUserName(username);
-            if(existsUser){
+    public void validExistFieldUserName(Map<String, String> errors, String username, Long footballPitchAdminId) {
+        if (StringUtils.hasText(username)) {
+            Optional<UserEntity> footballPitchAdmin = userRepository.findByUsername(username);
+            if (footballPitchAdmin.isPresent() && !footballPitchAdmin.get().getUserId().equals(footballPitchAdminId)) {
                 errors.put("username", ErrorCode.ALREADY_EXIST.name());
-            }
-        }
-    }
-    public void validExistFieldFootBallPitch(Map<String, String> errors, Long footballPitchId) {
-        if (footballPitchId != null) {
-            Optional<FootballPitchEntity> footballPitch = footballPitchRepository.findById(footballPitchId);
-            if (footballPitch.isEmpty()) {
-                errors.put("footballPitchId", ErrorCode.MISSING_VALUE.name());
             }
         }
     }
 
     @Override
-    public OnlyIdResponse cerateFootballPitchAdmin(CreateFootballPitchAdminRequest request) {
+    public OnlyIdResponse createFootballPitchAdmin(CreateUpdateFootballPitchAdminRequest request) {
         Map<String, String> errors = new HashMap<>();
         validFormatField(errors, request);
-        validExistFieldUserName(errors, request.getUsername());
-        validExistFieldFootBallPitch(errors,request.getFootballPitchId());
+        validExistFieldUserName(errors, request.getUsername(), null);
         if (!errors.isEmpty()) {
             return OnlyIdResponse.builder()
                     .setSuccess(false)
@@ -141,7 +123,7 @@ public class FootballPitchAdminServiceImpl implements FootballPitchAdminService 
         user.setCreatedBy(principal.getUserId());
         user.setCreatedDate(new Timestamp(System.currentTimeMillis()));
         Optional<RoleEntity> role = roleRepository.findById(KmsRole.FOOTBALL_PITCH_ROLE.getRoleId());
-        if(!role.isEmpty()){
+        if (!role.isEmpty()) {
             user.setRole(role.get());
         }
         addressRepository.save(address);
@@ -151,15 +133,14 @@ public class FootballPitchAdminServiceImpl implements FootballPitchAdminService 
         return OnlyIdResponse.builder()
                 .setSuccess(true)
                 .setId(user.getUserId())
-                .setName(user.getFirstName()+" "+user.getLastName())
+                .setName(user.getFirstName() + " " + user.getLastName())
                 .build();
     }
 
     @Override
     public GetFootballPitchAdminResponse getFootballPitchAdmin(Long id) {
-
-        Optional<UserEntity> user = userRepository.findByIdAndRole(id,KmsRole.FOOTBALL_PITCH_ROLE.getRole());
-        if(user.isEmpty()){
+        Optional<UserEntity> user = userRepository.findByIdAndRole(id, KmsRole.FOOTBALL_PITCH_ROLE.getRole());
+        if (user.isEmpty()) {
             throw new NotFoundException("Not Found FootBallPitch Admin");
         }
 
@@ -170,12 +151,12 @@ public class FootballPitchAdminServiceImpl implements FootballPitchAdminService 
     }
 
     @Override
-    public OnlyIdResponse updateFootballPitchAdmin(Long id,UpdateFootballPitchAdminRequest request) {
-        UserEntity user = userRepository.findByIdAndRole(id,KmsRole.FOOTBALL_PITCH_ROLE.getRole())
-                .orElseThrow(() -> new NotFoundException("Not found footballpitch admin"));
+    public OnlyIdResponse updateFootballPitchAdmin(Long id, CreateUpdateFootballPitchAdminRequest request) {
+        UserEntity user = userRepository.findByIdAndRole(id, KmsRole.FOOTBALL_PITCH_ROLE.getRole())
+                .orElseThrow(() -> new NotFoundException("Not found football pitch admin"));
         Map<String, String> errors = new HashMap<>();
-        validFormatFieldForUpdate(errors, request);
-        validExistFieldFootBallPitch(errors, request.getFootballPitchId());
+        validFormatField(errors, request);
+        validExistFieldUserName(errors, request.getUsername(), user.getUserId());
         if (!errors.isEmpty()) {
             return OnlyIdResponse.builder()
                     .setSuccess(false)
@@ -212,14 +193,14 @@ public class FootballPitchAdminServiceImpl implements FootballPitchAdminService 
         return OnlyIdResponse.builder()
                 .setSuccess(true)
                 .setId(user.getUserId())
-                .setName(user.getFirstName()+" "+user.getLastName())
+                .setName(user.getFirstName() + " " + user.getLastName())
                 .build();
     }
 
     @Override
     public NoContentResponse deleteFootballPitchAdmin(Long id) {
-        UserEntity user = userRepository.findByIdAndRole(id,KmsRole.FOOTBALL_PITCH_ROLE.getRole())
-                .orElseThrow(() -> new NotFoundException("Not found footballpitch admin"));
+        UserEntity user = userRepository.findByIdAndRole(id, KmsRole.FOOTBALL_PITCH_ROLE.getRole())
+                .orElseThrow(() -> new NotFoundException("Not found football pitch admin"));
         userRepository.delete(user);
         addressRepository.delete(user.getAddress());
         return NoContentResponse.builder()
@@ -228,19 +209,11 @@ public class FootballPitchAdminServiceImpl implements FootballPitchAdminService 
     }
 
     @Override
-    public ListFootballPitchAdminResponse getListFootballPitchAdmins(String name, Long footballPitchId) {
-        List<UserEntity> listFootballPitchAdmins;
-        if(footballPitchId == null){
-            listFootballPitchAdmins = userRepository.findByRoleAndName(name,KmsRole.FOOTBALL_PITCH_ROLE.getRole());
-        } else {
-            FootballPitchEntity footballPitch = footballPitchRepository.findById(footballPitchId)
-                    .orElseThrow(() -> new NotFoundException("Not Found footballPitchId"));
-            listFootballPitchAdmins = userRepository.findByRoleAndName(name,KmsRole.FOOTBALL_PITCH_ROLE.getRole(),footballPitchId);
-        }
-
+    public ListFootballPitchAdminResponse getListFootballPitchAdmin(GetListFootballPitchAdminRequest request) {
+        List<UserEntity> footballPitchAdmins = userDslRepository.listFootballPitchAdmin(request);
         return ListFootballPitchAdminResponse.builder()
                 .setSuccess(true)
-                .setFootballPitchAdminS(listFootballPitchAdmins.stream()
+                .setFootballPitchAdminS(footballPitchAdmins.stream()
                         .map(fp -> getBuilder(fp))
                         .collect(Collectors.toList()))
                 .build();

@@ -1,13 +1,13 @@
 package com.backend.kmsproject.request.subfootballpitch;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.io.Serializable;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class CreateUpdateSubFootballPitchRequest implements Serializable {
     private String subFootballPitchName;
     private Long footballPitchId;

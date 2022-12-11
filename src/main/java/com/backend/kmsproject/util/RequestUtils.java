@@ -22,4 +22,8 @@ public class RequestUtils {
     public static Integer defaultIfNull(Integer value, Integer df) {
         return value == null ? df : value;
     }
+
+    public static Boolean defaultIfNull(Boolean value, Boolean df) {
+        return value == null ? df : value;
+    }
 }
