@@ -39,7 +39,7 @@ public class SubFootballServiceImpl implements SubFootballPitchService {
     @Override
     public ListSubFootballPitchResponse getListSubFootballPitch(GetListSubFootballPitchRequest request) {
         KmsPrincipal principal = SecurityUtils.getPrincipal();
-        request.setFootballPitchId(principal.getFootballPitchId());
+        request.setFootballPitchId(principal.isFootballPitchAdmin() ? principal.getFootballPitchId() : request.getFootballPitchId());
         List<SubFootballPitchEntity> subFootballPitches = subFootballPitchDslRepository.listSubFootballPitch(request);
         return ListSubFootballPitchResponse.builder()
                 .setSuccess(true)
