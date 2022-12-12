@@ -45,14 +45,11 @@ public class BookingServiceImpl implements BookingService {
     private final BookingOtherServiceRepository bookingOtherServiceRepository;
     private final BookingDslRepository bookingDslRepository;
 
-    public void validFormatField(Map<String, String> errors, CreateBookingRequest request, KmsPrincipal principal) {
+    public void validFormatField(Map<String, String> errors, CreateBookingRequest request) {
         if (request.getBookDay() == null) {
             errors.put("bookday", ErrorCode.MISSING_VALUE.name());
         } else if(request.getBookDay().isBefore(LocalDate.now())){
             errors.put("bookday", ErrorCode.INVALID_VALUE.name());
-        }
-        if (principal.getRole().equals(KmsRole.FOOTBALL_PITCH_ROLE.getRole()) && request.getUserid() == null) {
-            errors.put("userid", ErrorCode.MISSING_VALUE.name());
         }
         if (request.getSubFootballPitchId() == null){
             errors.put("subFootBallPitchId", ErrorCode.MISSING_VALUE.name());
@@ -66,44 +63,32 @@ public class BookingServiceImpl implements BookingService {
         if(request.getTimeStart()!=null && request.getTimeEnd()!=null){
             if(request.getTimeStart().isAfter(request.getTimeEnd())){
                 errors.put("timeStart and TimeEnd", ErrorCode.INVALID_VALUE.name());
+            } else {
+                long minutes = Duration.between(request.getTimeStart(), request.getTimeEnd()).toMinutes();
+                long hours = Duration.between(request.getTimeStart(), request.getTimeEnd()).toHours();
+                if(minutes % 60 != 0){
+                    errors.put("timeStart and TimeEnd", ErrorCode.INVALID_VALUE.name());
+                } else if(hours<1 || hours > 2){
+                    errors.put("timeStart and TimeEnd", ErrorCode.INVALID_VALUE.name());
+                }
             }
         }
     }
 
-    public void validExistField(Map<String, String> errors, CreateBookingRequest request, KmsPrincipal  principal) {
-        if (principal.getRole().equals(KmsRole.FOOTBALL_PITCH_ROLE.getRole()) && !errors.containsKey("userid")) {
-            Optional<UserEntity> user = userRepository.findById(request.getUserid());
-            if (user.isEmpty()) {
-                errors.put("userid", ErrorCode.NOT_FOUND.name());
-            }
-        }
+    public void validExistField(Map<String, String> errors, CreateBookingRequest request) {
         if (!errors.containsKey("subFootBallPitchId")) {
             Optional<SubFootballPitchEntity> subFootballPitch = subFootballPitchRepository.findById(request.getSubFootballPitchId());
             if (subFootballPitch.isEmpty()) {
                 errors.put("subFootB00allPitchId", ErrorCode.NOT_FOUND.name());
-            } else if(principal.getRole().equals(KmsRole.FOOTBALL_PITCH_ROLE.getRole())) {
-                List<UserEntity> users = userDslRepository.listFootballPitchAdmin(subFootballPitch.get().getFootballPitch().getFootballPitchId());
-                int s =0;
-                for (UserEntity u:users
-                     ) {
-                    if(u.getUserId().equals(principal.getUserId())){
-                        s++;
-                        break;
-                    }
-                }
-                if(s==0){
-                    errors.put("subFootB00allPitchId", ErrorCode.INVALID_VALUE.name());
-                }
             }
-
         }
     }
     @Override
     public OnlyIdResponse createBooking(CreateBookingRequest request) {
         KmsPrincipal principal = SecurityUtils.getPrincipal();
         Map<String, String> errors = new HashMap<>();
-        validFormatField(errors, request, principal);
-        validExistField(errors, request, principal);
+        validFormatField(errors, request);
+        validExistField(errors, request);
         if (!errors.isEmpty()) {
             return OnlyIdResponse.builder()
                     .setSuccess(false)
@@ -114,13 +99,8 @@ public class BookingServiceImpl implements BookingService {
         }
         BookingEntity booking = new BookingEntity();
         booking.setBookDay(request.getBookDay());
-        if(principal.getRole().equals(KmsRole.CUSTOMER_ROLE.getRole())){
-            booking.setCustomer(userRepository.findById(principal.getUserId()).get());
-            booking.setStatus(Boolean.FALSE);
-        } else {
-            booking.setCustomer(userRepository.findById(request.getUserid()).get());
-            booking.setStatus(Boolean.TRUE);
-        }
+        booking.setCustomer(userRepository.findById(principal.getUserId()).get());
+        booking.setStatus(Boolean.FALSE);
         booking.setTimeStart(request.getTimeStart());
         booking.setTimeEnd(request.getTimeEnd());
         booking.setIsPaid(Boolean.FALSE);
@@ -159,10 +139,10 @@ public class BookingServiceImpl implements BookingService {
     }
 
     public boolean checkAuthority(BookingEntity booking, KmsPrincipal principal){
-        if(principal.getRole().equals(KmsRole.CUSTOMER_ROLE.getRole()) &&
+        if(principal.isCustomer() &&
                 ! booking.getCustomer().getUserId().equals(principal.getUserId())){
             return false;
-        } else if(principal.getRole().equals(KmsRole.FOOTBALL_PITCH_ROLE.getRole())) {
+        } else if(principal.isFootballPitchAdmin()) {
             List<UserEntity> users = userDslRepository.listFootballPitchAdmin(booking.getSubFootballPitch().getFootballPitch().getFootballPitchId());
             int s =0;
             for (UserEntity u:users
@@ -186,7 +166,7 @@ public class BookingServiceImpl implements BookingService {
         }
         KmsPrincipal principal = SecurityUtils.getPrincipal();
         Map<String, String> errors = new HashMap<>();
-        if(checkAuthority(booking.get(),principal)){
+        if(booking.get().getCustomer().getUserId().equals(principal.getUserId())){
             bookingRepository.delete(booking.get());
             return NoContentResponse.builder()
                     .setSuccess(true)
@@ -207,12 +187,11 @@ public class BookingServiceImpl implements BookingService {
         }
         KmsPrincipal principal = SecurityUtils.getPrincipal();
         Map<String, String> errors = new HashMap<>();
-        if(principal.getRole().equals(KmsRole.CUSTOMER_ROLE.getRole()) &&
-                !booking.get().getCustomer().getUserId().equals(principal.getUserId())){
+        if(!booking.get().getCustomer().getUserId().equals(principal.getUserId())){
             errors.put("id",ErrorCode.INVALID_VALUE.name());
         }
-        validFormatField(errors, request, principal);
-        validExistField(errors, request, principal);
+        validFormatField(errors, request);
+        validExistField(errors, request);
         if (!errors.isEmpty()) {
             return OnlyIdResponse.builder()
                     .setSuccess(false)
@@ -227,9 +206,6 @@ public class BookingServiceImpl implements BookingService {
         booking.get().setSubFootballPitch(subFootballPitchRepository.findById(request.getSubFootballPitchId()).get());
         int hours = (int) Duration.between(booking.get().getTimeStart(), booking.get().getTimeEnd()).toHours();
         booking.get().setTotalPrice(booking.get().getSubFootballPitch().getPricePerHour() * hours);
-        if(principal.getRole().equals(KmsRole.FOOTBALL_PITCH_ROLE.getRole())){
-            booking.get().setCustomer(userRepository.findById(request.getUserid()).get());
-        }
         booking.get().setModifiedBy(principal.getUserId());
         booking.get().setModifiedDate(new Timestamp(System.currentTimeMillis()));
         bookingRepository.save(booking.get());
@@ -251,6 +227,26 @@ public class BookingServiceImpl implements BookingService {
         return ListHistoryBookingResponse.builder()
                 .setSuccess(true)
                 .setHistoryBookings(historyBookings)
+                .build();
+    }
+
+    @Override
+    public NoContentResponse acceptBooking(Long idBooking) {
+        Optional<BookingEntity> booking = bookingRepository.findById(idBooking);
+        if(booking.isEmpty()){
+            throw new NotFoundException("not found idBooking");
+        }
+        KmsPrincipal principal = SecurityUtils.getPrincipal();
+        Map<String, String> errors = new HashMap<>();
+        if(!checkAuthority(booking.get(),principal)) {
+            return NoContentResponse.builder()
+                    .setSuccess(false)
+                    .setErrorResponse(ErrorResponse.builder().setErrors(errors).build())
+                    .build();
+        }
+        booking.get().setStatus(true);
+        return NoContentResponse.builder()
+                .setSuccess(true)
                 .build();
     }
 

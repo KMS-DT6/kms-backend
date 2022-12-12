@@ -14,4 +14,5 @@ public interface BookingService {
     NoContentResponse deleteBooking(Long idBooking);
     OnlyIdResponse updateBooking(CreateBookingRequest request,Long id);
     ListHistoryBookingResponse getListBooking(GetListBookingRequest request);
+    NoContentResponse acceptBooking(Long idBooking);
 }
