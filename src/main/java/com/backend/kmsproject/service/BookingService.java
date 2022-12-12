@@ -12,7 +12,6 @@ public interface BookingService {
     OnlyIdResponse createBooking(CreateBookingRequest request);
     GetBookingResponse getBooking(Long idBooking);
     NoContentResponse deleteBooking(Long idBooking);
-    OnlyIdResponse updateBooking(CreateBookingRequest request);
-
+    OnlyIdResponse updateBooking(CreateBookingRequest request,Long id);
     ListHistoryBookingResponse getListBooking(GetListBookingRequest request);
 }

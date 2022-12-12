@@ -45,7 +45,7 @@ public class BookingController {
 
     @Operation(summary = "Get Booking")
     @GetMapping("/{id}")
-    public Response<HistoryBookingDTO> getFootballPitch(@PathVariable("id") Long id) {
+    public Response<HistoryBookingDTO> getBooking(@PathVariable("id") Long id) {
         GetBookingResponse response = bookingService.getBooking(id);
         if (response.getSuccess()) {
             return bookingConverter.getSuccess(response);
@@ -55,7 +55,7 @@ public class BookingController {
 
     @Operation(summary = "Delete Booking")
     @DeleteMapping("/{id}")
-    public Response<NoContentDTO> deleteFootballPitchAdmin(@PathVariable("id") Long id) {
+    public Response<NoContentDTO> deleteBooking(@PathVariable("id") Long id) {
         NoContentResponse response = bookingService.deleteBooking(id);
         if (response.getSuccess()) {
             return bookingConverter.getSuccess(response);
@@ -65,8 +65,19 @@ public class BookingController {
 
     @Operation(summary = "Get List Booking")
     @GetMapping
-    public Response<ListDTO<HistoryBookingDTO>> getListFootballPitchAdmin(@ModelAttribute @Valid GetListBookingRequest request) {
+    public Response<ListDTO<HistoryBookingDTO>> getListBooking(@ModelAttribute @Valid GetListBookingRequest request) {
         ListHistoryBookingResponse response = bookingService.getListBooking(request);
+        if (response.getSuccess()) {
+            return bookingConverter.getSuccess(response);
+        }
+        return bookingConverter.getError(response.getErrorResponse());
+    }
+
+    @Operation(summary = "Update FootballPitch Admin")
+    @PutMapping("/{id}")
+    public Response<OnlyIdDTO> updateBooking(@PathVariable("id") Long id,
+                                             @RequestBody CreateBookingRequest request) {
+        OnlyIdResponse response = bookingService.updateBooking(request, id);
         if (response.getSuccess()) {
             return bookingConverter.getSuccess(response);
         }
