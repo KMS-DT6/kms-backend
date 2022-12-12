@@ -14,6 +14,8 @@ public class KmsConstant {
     public static final String MANAGE_OTHER_SERVICE = "Manage other service";
     public static final String MANAGE_BOOKING = "Manage booking";
     public static final String BOOKING = "Booking";
+    public static final String SEE_LIST_FOOTBALL_PITCH = "See list football pitch";
+    public static final String SEE_LIST_SUB_FOOTBALL_PITCH = "See list sub football pitch";
     // Size
     public static final Integer USERNAME_MIN_SIZE = 5;
     public static final Integer USERNAME_MAX_SIZE = 15;
