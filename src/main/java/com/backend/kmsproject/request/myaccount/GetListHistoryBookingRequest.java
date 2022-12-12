@@ -11,6 +11,6 @@ public class GetListHistoryBookingRequest implements Serializable {
     private String footballPitchName;
     private String fromDate;
     private String toDate;
-    private Boolean status; // accepted?
+    private String status; // accepted?
     private Boolean isPaid;
 }

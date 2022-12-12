@@ -8,12 +8,13 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
+import java.util.List;
 
 @Getter
 @Setter
 @Builder(setterPrefix = "set")
-public class GetBookingResponse implements Serializable {
+public class ListBookingResponse implements Serializable {
     private Boolean success;
     private ErrorResponse errorResponse;
-    private BookingDTO bookingDTO;
+    private List<BookingDTO> bookingDTOS;
 }

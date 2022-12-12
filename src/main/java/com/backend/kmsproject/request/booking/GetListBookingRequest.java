@@ -9,8 +9,9 @@ import java.io.Serializable;
 @Setter
 public class GetListBookingRequest implements Serializable {
     private Long subFootballPitchId;
+    private String customerName;
     private String fromDate;
     private String toDate;
-    private Boolean status;
+    private String status;
     private Boolean isPaid;
 }

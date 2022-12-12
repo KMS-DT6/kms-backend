@@ -56,6 +56,10 @@ public class BookingDslRepository {
         if (request.getSubFootballPitchId() != null) {
             query.where(booking.subFootballPitch.subFootBallPitchId.eq(request.getSubFootballPitchId()));
         }
+        if (StringUtils.hasText(request.getCustomerName())) {
+            query.where(user.firstName.concat(" ").concat(user.lastName)
+                    .containsIgnoreCase(request.getCustomerName()));
+        }
         if (StringUtils.hasText(request.getFromDate()) && StringUtils.hasText(request.getToDate())
                 && LocalDate.parse(request.getFromDate()).isBefore(LocalDate.parse(request.getToDate()))) {
             query.where(booking.bookDay.between(LocalDate.parse(request.getFromDate()),
