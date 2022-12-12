@@ -160,7 +160,7 @@ public class MyAccountServiceImpl implements MyAccountService {
     private HistoryBookingDTO toBuilder(BookingEntity booking, List<BookingOtherServiceEntity> bookingOtherServices) {
         HistoryBookingDTO.HistoryBookingDTOBuilder builder = HistoryBookingDTO.builder();
         builder.setBookingId(booking.getBookingId())
-                .setStatus(Boolean.TRUE.equals(booking.getStatus()) ? Boolean.TRUE : Boolean.FALSE)
+                .setStatus(booking.getStatus())
                 .setIsPaid(Boolean.TRUE.equals(booking.getIsPaid()) ? Boolean.TRUE : Boolean.FALSE)
                 .setBookDate(DatetimeUtils.formatLocalDate(booking.getBookDay()))
                 .setTimeStart(DatetimeUtils.formatLocalTime(booking.getTimeStart()))

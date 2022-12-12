@@ -16,7 +16,7 @@ public class HistoryBookingDTO implements Serializable {
     private String timeStart;
     private String timeEnd;
     private Boolean isPaid;
-    private Boolean status;
+    private String status;
     private Double pricePitch;
     private Double totalPriceIncludeService;
     private OtherService otherService;
