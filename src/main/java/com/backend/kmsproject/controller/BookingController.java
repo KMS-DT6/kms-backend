@@ -3,9 +3,11 @@ package com.backend.kmsproject.controller;
 import com.backend.kmsproject.converter.BookingConverter;
 import com.backend.kmsproject.model.dto.FootballPitchAdminDTO;
 import com.backend.kmsproject.model.dto.HistoryBookingDTO;
+import com.backend.kmsproject.model.dto.common.NoContentDTO;
 import com.backend.kmsproject.model.dto.common.OnlyIdDTO;
 import com.backend.kmsproject.request.booking.CreateBookingRequest;
 import com.backend.kmsproject.request.footballpitchadmin.CreateUpdateFootballPitchAdminRequest;
+import com.backend.kmsproject.response.NoContentResponse;
 import com.backend.kmsproject.response.OnlyIdResponse;
 import com.backend.kmsproject.response.Response;
 import com.backend.kmsproject.response.booking.GetBookingResponse;
@@ -38,6 +40,16 @@ public class BookingController {
     @GetMapping("/{id}")
     public Response<HistoryBookingDTO> getFootballPitch(@PathVariable("id") Long id) {
         GetBookingResponse response = bookingService.getBooking(id);
+        if (response.getSuccess()) {
+            return bookingConverter.getSuccess(response);
+        }
+        return bookingConverter.getError(response.getErrorResponse());
+    }
+
+    @Operation(summary = "Delete Booking")
+    @DeleteMapping("/{id}")
+    public Response<NoContentDTO> deleteFootballPitchAdmin(@PathVariable("id") Long id) {
+        NoContentResponse response = bookingService.deleteBooking(id);
         if (response.getSuccess()) {
             return bookingConverter.getSuccess(response);
         }

@@ -3,6 +3,7 @@ package com.backend.kmsproject.service.impl;
 import com.backend.kmsproject.common.constants.ErrorCode;
 import com.backend.kmsproject.common.constants.KmsConstant;
 import com.backend.kmsproject.common.enums.KmsRole;
+import com.backend.kmsproject.common.exception.ErrorResponseRuntimeException;
 import com.backend.kmsproject.common.exception.NotFoundException;
 import com.backend.kmsproject.model.dto.HistoryBookingDTO;
 import com.backend.kmsproject.model.entity.BookingEntity;
@@ -17,6 +18,7 @@ import com.backend.kmsproject.repository.jpa.UserRepository;
 import com.backend.kmsproject.request.booking.CreateBookingRequest;
 import com.backend.kmsproject.request.myaccount.UpdateMyAccountRequest;
 import com.backend.kmsproject.response.ErrorResponse;
+import com.backend.kmsproject.response.NoContentResponse;
 import com.backend.kmsproject.response.OnlyIdResponse;
 import com.backend.kmsproject.response.booking.GetBookingResponse;
 import com.backend.kmsproject.response.booking.ListHistoryBookingResponse;
@@ -152,6 +154,47 @@ public class BookingServiceImpl implements BookingService {
                 .setSuccess(true)
                 .setBookingDTO(toBuilder(booking.get(),bookingOtherServices))
                 .build();
+    }
+
+    public boolean checkAuthority(BookingEntity booking, KmsPrincipal principal){
+        if(principal.getRole().equals(KmsRole.CUSTOMER_ROLE.getRole()) &&
+                ! booking.getCustomer().getUserId().equals(principal.getUserId())){
+            return false;
+        } else if(principal.getRole().equals(KmsRole.FOOTBALL_PITCH_ROLE.getRole())) {
+            List<UserEntity> users = userDslRepository.listFootballPitchAdmin(booking.getSubFootballPitch().getFootballPitch().getFootballPitchId());
+            int s =0;
+            for (UserEntity u:users
+            ) {
+                if(u.getUserId().equals(principal.getUserId())){
+                    s++;
+                    break;
+                }
+            }
+            if(s==0){
+                return false;
+            }
+        }
+        return true;
+    }
+    @Override
+    public NoContentResponse deleteBooking(Long idBooking) {
+        Optional<BookingEntity> booking = bookingRepository.findById(idBooking);
+        if(booking.isEmpty()){
+            throw new NotFoundException("not found idBooking");
+        }
+        KmsPrincipal principal = SecurityUtils.getPrincipal();
+        Map<String, String> errors = new HashMap<>();
+        if(checkAuthority(booking.get(),principal)){
+            bookingRepository.delete(booking.get());
+            return NoContentResponse.builder()
+                    .setSuccess(true)
+                    .build();
+        }else {
+            return NoContentResponse.builder()
+                    .setSuccess(false)
+                    .setErrorResponse(ErrorResponse.builder().setErrors(errors).build())
+                    .build();
+        }
     }
 
     private HistoryBookingDTO toBuilder(BookingEntity booking, List<BookingOtherServiceEntity> bookingOtherServices) {
