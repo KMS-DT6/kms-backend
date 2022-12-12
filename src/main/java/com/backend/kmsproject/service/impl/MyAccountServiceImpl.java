@@ -55,12 +55,13 @@ public class MyAccountServiceImpl implements MyAccountService {
         authorities.addAll(Arrays.asList(KmsConstant.LOGIN, KmsConstant.LOGOUT, KmsConstant.UPDATE_INFORMATION));
 
         if (KmsRole.ADMIN_ROLE.getRole().equalsIgnoreCase(user.getRole().getRoleName())) {
-            authorities.addAll(Arrays.asList(KmsConstant.MANAGE_SYSTEM_ADMIN, KmsConstant.MANAGE_FOOTBALL_PITCH, KmsConstant.MANAGE_FOOTBALL_PITCH_ADMIN));
+            authorities.addAll(Arrays.asList(KmsConstant.MANAGE_SYSTEM_ADMIN, KmsConstant.MANAGE_FOOTBALL_PITCH,
+                    KmsConstant.MANAGE_FOOTBALL_PITCH_ADMIN, KmsConstant.SEE_LIST_FOOTBALL_PITCH, KmsConstant.SEE_LIST_SUB_FOOTBALL_PITCH));
         } else if (KmsRole.FOOTBALL_PITCH_ROLE.getRole().equalsIgnoreCase(user.getRole().getRoleName())) {
             authorities.addAll(Arrays.asList(KmsConstant.MANAGE_FOOTBALL_PITCH_ADMIN, KmsConstant.MANAGE_SUB_FOOTBALL_PITCH,
                     KmsConstant.MANAGE_OTHER_SERVICE, KmsConstant.MANAGE_CUSTOMER, KmsConstant.MANAGE_BOOKING));
         } else {
-            authorities.addAll(Arrays.asList(KmsConstant.BOOKING));
+            authorities.addAll(Arrays.asList(KmsConstant.BOOKING, KmsConstant.SEE_LIST_FOOTBALL_PITCH, KmsConstant.SEE_LIST_SUB_FOOTBALL_PITCH));
         }
 
         builder.setAuthorities(authorities);
