@@ -2,9 +2,13 @@ package com.backend.kmsproject.service.impl;
 
 import com.backend.kmsproject.common.constants.ErrorCode;
 import com.backend.kmsproject.common.constants.KmsConstant;
+import com.backend.kmsproject.common.enums.KmsRole;
 import com.backend.kmsproject.model.entity.BookingEntity;
+import com.backend.kmsproject.model.entity.SubFootballPitchEntity;
 import com.backend.kmsproject.model.entity.UserEntity;
+import com.backend.kmsproject.repository.dsl.UserDslRepository;
 import com.backend.kmsproject.repository.jpa.BookingRepository;
+import com.backend.kmsproject.repository.jpa.SubFootballPitchRepository;
 import com.backend.kmsproject.repository.jpa.UserRepository;
 import com.backend.kmsproject.request.booking.CreateBookingRequest;
 import com.backend.kmsproject.request.myaccount.UpdateMyAccountRequest;
@@ -19,7 +23,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.sql.Timestamp;
+import java.time.Duration;
+import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -29,16 +36,21 @@ public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
+    private final SubFootballPitchRepository subFootballPitchRepository;
 
-    public void validFormatField(Map<String, String> errors, CreateBookingRequest request) {
+    private final UserDslRepository userDslRepository;
+
+    public void validFormatField(Map<String, String> errors, CreateBookingRequest request, KmsPrincipal principal) {
         if (request.getBookDay() == null) {
             errors.put("bookday", ErrorCode.MISSING_VALUE.name());
+        } else if(request.getBookDay().isBefore(LocalDate.now())){
+            errors.put("bookday", ErrorCode.INVALID_VALUE.name());
         }
-        if (request.getUserid() == null) {
+        if (principal.getRole().equals(KmsRole.FOOTBALL_PITCH_ROLE.getRole()) && request.getUserid() == null) {
             errors.put("userid", ErrorCode.MISSING_VALUE.name());
         }
         if (request.getSubFootballPitchId() == null){
-            errors.put("subFootB00allPitchId", ErrorCode.MISSING_VALUE.name());
+            errors.put("subFootBallPitchId", ErrorCode.MISSING_VALUE.name());
         }
         if(request.getTimeEnd() == null){
             errors.put("timeEnd", ErrorCode.MISSING_VALUE.name());
@@ -48,31 +60,44 @@ public class BookingServiceImpl implements BookingService {
         }
         if(request.getTimeStart()!=null && request.getTimeEnd()!=null){
             if(request.getTimeStart().isAfter(request.getTimeEnd())){
-                errors.put("time", ErrorCode.INVALID_VALUE.name());
+                errors.put("timeStart and TimeEnd", ErrorCode.INVALID_VALUE.name());
             }
         }
     }
 
-    public void validExistField(Map<String, String> errors, CreateBookingRequest request) {
-        if (!errors.containsKey("userid")) {
+    public void validExistField(Map<String, String> errors, CreateBookingRequest request, KmsPrincipal  principal) {
+        if (principal.getRole().equals(KmsRole.FOOTBALL_PITCH_ROLE.getRole()) && !errors.containsKey("userid")) {
             Optional<UserEntity> user = userRepository.findById(request.getUserid());
-            if (user.isPresent()) {
+            if (user.isEmpty()) {
                 errors.put("userid", ErrorCode.NOT_FOUND.name());
             }
         }
-        if (!errors.containsKey("subFootB00allPitchId")) {
-            Optional<UserEntity> user = userRepository.findById(request.getUserid());
-            if (user.isPresent()) {
+        if (!errors.containsKey("subFootBallPitchId")) {
+            Optional<SubFootballPitchEntity> subFootballPitch = subFootballPitchRepository.findById(request.getSubFootballPitchId());
+            if (subFootballPitch.isEmpty()) {
                 errors.put("subFootB00allPitchId", ErrorCode.NOT_FOUND.name());
+            } else if(principal.getRole().equals(KmsRole.FOOTBALL_PITCH_ROLE.getRole())) {
+                List<UserEntity> users = userDslRepository.listFootballPitchAdmin(subFootballPitch.get().getFootballPitch().getFootballPitchId());
+                int s =0;
+                for (UserEntity u:users
+                     ) {
+                    if(u.getUserId().equals(principal.getUserId())){
+                        s++;
+                    }
+                }
+                if(s==0){
+                    errors.put("subFootB00allPitchId", ErrorCode.INVALID_VALUE.name());
+                }
             }
+
         }
     }
     @Override
     public OnlyIdResponse createBooking(CreateBookingRequest request) {
+        KmsPrincipal principal = SecurityUtils.getPrincipal();
         Map<String, String> errors = new HashMap<>();
-        validFormatField(errors, request);
-        validFormatField(errors, request);
-        validExistField(errors,request);
+        validFormatField(errors, request, principal);
+        validExistField(errors, request, principal);
         if (!errors.isEmpty()) {
             return OnlyIdResponse.builder()
                     .setSuccess(false)
@@ -81,17 +106,28 @@ public class BookingServiceImpl implements BookingService {
                             .build())
                     .build();
         }
-        KmsPrincipal principal = SecurityUtils.getPrincipal();
         BookingEntity booking = new BookingEntity();
         booking.setBookDay(request.getBookDay());
-        booking.setCustomer(userRepository.findById(request.getUserid()).get());
+        if(principal.getRole().equals(KmsRole.CUSTOMER_ROLE.getRole())){
+            booking.setCustomer(userRepository.findById(principal.getUserId()).get());
+            booking.setStatus(Boolean.FALSE);
+        } else {
+            booking.setCustomer(userRepository.findById(request.getUserid()).get());
+            booking.setStatus(Boolean.TRUE);
+        }
         booking.setTimeStart(request.getTimeStart());
         booking.setTimeEnd(request.getTimeEnd());
-        booking.setIsPaid(false);
-        booking.setStatus(false);
+        booking.setIsPaid(Boolean.FALSE);
+        booking.setSubFootballPitch(subFootballPitchRepository.findById(request.getSubFootballPitchId()).get());
         booking.setCreatedBy(principal.getUserId());
         booking.setCreatedDate(new Timestamp(System.currentTimeMillis()));
+        int hours = (int) Duration.between(booking.getTimeStart(), booking.getTimeEnd()).toHours();
+        booking.setTotalPrice(booking.getSubFootballPitch().getPricePerHour() * hours);
+        bookingRepository.save(booking);
 
-        return null;
+        return OnlyIdResponse.builder()
+                .setSuccess(true)
+                .setId(booking.getBookingId())
+                .build();
     }
 }

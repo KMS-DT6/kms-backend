@@ -1,6 +1,13 @@
 package com.backend.kmsproject.controller;
 
+import com.backend.kmsproject.converter.BookingConverter;
+import com.backend.kmsproject.model.dto.common.OnlyIdDTO;
+import com.backend.kmsproject.request.booking.CreateBookingRequest;
+import com.backend.kmsproject.request.footballpitchadmin.CreateUpdateFootballPitchAdminRequest;
+import com.backend.kmsproject.response.OnlyIdResponse;
+import com.backend.kmsproject.response.Response;
 import com.backend.kmsproject.service.BookingService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -11,4 +18,15 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/booking-pitches")
 public class BookingController {
     private final BookingService bookingService;
+
+    private final BookingConverter bookingConverter;
+    @Operation(summary = "Create Booking")
+    @PostMapping
+    public Response<OnlyIdDTO> createBooking(@RequestBody CreateBookingRequest request) {
+        OnlyIdResponse response = bookingService.createBooking(request);
+        if (response.getSuccess()) {
+            return bookingConverter.getSuccess(response);
+        }
+        return bookingConverter.getError(response.getErrorResponse());
+    }
 }
