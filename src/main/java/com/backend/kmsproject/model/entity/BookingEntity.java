@@ -36,7 +36,7 @@ public class BookingEntity implements Serializable {
     @Column(name = "ispaid")
     private Boolean isPaid;
     @Column(name = "status")
-    private Boolean status;
+    private String status;
     @Column(name = "createddate")
     private Timestamp createdDate;
     @Column(name = "modifieddate")

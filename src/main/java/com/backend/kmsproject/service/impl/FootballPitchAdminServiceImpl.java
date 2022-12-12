@@ -119,7 +119,8 @@ public class FootballPitchAdminServiceImpl implements FootballPitchAdminService 
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
-        user.setFootballPitch(footballPitchRepository.findById(request.getFootballPitchId()).get());
+        Long footballPitchId = principal.isFootballPitchAdmin() ? principal.getFootballPitchId() : request.getFootballPitchId();
+        user.setFootballPitch(footballPitchRepository.findById(footballPitchId).get());
         user.setCreatedBy(principal.getUserId());
         user.setCreatedDate(new Timestamp(System.currentTimeMillis()));
         Optional<RoleEntity> role = roleRepository.findById(KmsRole.FOOTBALL_PITCH_ROLE.getRoleId());
@@ -139,6 +140,7 @@ public class FootballPitchAdminServiceImpl implements FootballPitchAdminService 
 
     @Override
     public GetFootballPitchAdminResponse getFootballPitchAdmin(Long id) {
+        KmsPrincipal principal = SecurityUtils.getPrincipal();
         Optional<UserEntity> user = userRepository.findByIdAndRole(id, KmsRole.FOOTBALL_PITCH_ROLE.getRole());
         if (user.isEmpty()) {
             throw new NotFoundException("Not Found FootBallPitch Admin");
@@ -152,6 +154,7 @@ public class FootballPitchAdminServiceImpl implements FootballPitchAdminService 
 
     @Override
     public OnlyIdResponse updateFootballPitchAdmin(Long id, CreateUpdateFootballPitchAdminRequest request) {
+        KmsPrincipal principal = SecurityUtils.getPrincipal();
         UserEntity user = userRepository.findByIdAndRole(id, KmsRole.FOOTBALL_PITCH_ROLE.getRole())
                 .orElseThrow(() -> new NotFoundException("Not found football pitch admin"));
         Map<String, String> errors = new HashMap<>();
@@ -165,11 +168,11 @@ public class FootballPitchAdminServiceImpl implements FootballPitchAdminService 
                             .build())
                     .build();
         }
-        KmsPrincipal principal = SecurityUtils.getPrincipal();
         user.setPhoneNumber(request.getPhoneNumber());
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
-        user.setFootballPitch(footballPitchRepository.findById(request.getFootballPitchId()).get());
+        Long footballPitchId = principal.isFootballPitchAdmin() ? principal.getFootballPitchId() : request.getFootballPitchId();
+        user.setFootballPitch(footballPitchRepository.findById(footballPitchId).get());
         user.setModifiedBy(principal.getUserId());
         user.setModifiedDate(new Timestamp(System.currentTimeMillis()));
         AddressEntity address;
@@ -210,6 +213,8 @@ public class FootballPitchAdminServiceImpl implements FootballPitchAdminService 
 
     @Override
     public ListFootballPitchAdminResponse getListFootballPitchAdmin(GetListFootballPitchAdminRequest request) {
+        KmsPrincipal principal = SecurityUtils.getPrincipal();
+        request.setFootballPitchId(principal.isFootballPitchAdmin() ? principal.getFootballPitchId() : request.getFootballPitchId());
         List<UserEntity> footballPitchAdmins = userDslRepository.listFootballPitchAdmin(request);
         return ListFootballPitchAdminResponse.builder()
                 .setSuccess(true)
