@@ -10,12 +10,14 @@ import com.backend.kmsproject.model.entity.BookingEntity;
 import com.backend.kmsproject.model.entity.BookingOtherServiceEntity;
 import com.backend.kmsproject.model.entity.SubFootballPitchEntity;
 import com.backend.kmsproject.model.entity.UserEntity;
+import com.backend.kmsproject.repository.dsl.BookingDslRepository;
 import com.backend.kmsproject.repository.dsl.UserDslRepository;
 import com.backend.kmsproject.repository.jpa.BookingOtherServiceRepository;
 import com.backend.kmsproject.repository.jpa.BookingRepository;
 import com.backend.kmsproject.repository.jpa.SubFootballPitchRepository;
 import com.backend.kmsproject.repository.jpa.UserRepository;
 import com.backend.kmsproject.request.booking.CreateBookingRequest;
+import com.backend.kmsproject.request.booking.GetListBookingRequest;
 import com.backend.kmsproject.request.myaccount.UpdateMyAccountRequest;
 import com.backend.kmsproject.response.ErrorResponse;
 import com.backend.kmsproject.response.NoContentResponse;
@@ -35,10 +37,7 @@ import org.springframework.util.StringUtils;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -50,6 +49,7 @@ public class BookingServiceImpl implements BookingService {
     private final SubFootballPitchRepository subFootballPitchRepository;
     private final UserDslRepository userDslRepository;
     private final BookingOtherServiceRepository bookingOtherServiceRepository;
+    private final BookingDslRepository bookingDslRepository;
 
     public void validFormatField(Map<String, String> errors, CreateBookingRequest request, KmsPrincipal principal) {
         if (request.getBookDay() == null) {
@@ -149,6 +149,14 @@ public class BookingServiceImpl implements BookingService {
         if(booking.isEmpty()){
             throw new NotFoundException("not found idBooking");
         }
+        KmsPrincipal principal = SecurityUtils.getPrincipal();
+        Map<String, String> errors = new HashMap<>();
+        if(!checkAuthority(booking.get(),principal)) {
+            return GetBookingResponse.builder()
+                    .setSuccess(false)
+                    .setErrorResponse(ErrorResponse.builder().setErrors(errors).build())
+                    .build();
+        }
         List<BookingOtherServiceEntity> bookingOtherServices = bookingOtherServiceRepository.findByBookingId(booking.get().getBookingId());
         return GetBookingResponse.builder()
                 .setSuccess(true)
@@ -195,6 +203,26 @@ public class BookingServiceImpl implements BookingService {
                     .setErrorResponse(ErrorResponse.builder().setErrors(errors).build())
                     .build();
         }
+    }
+
+    @Override
+    public OnlyIdResponse updateBooking(CreateBookingRequest request) {
+        return null;
+    }
+
+    @Override
+    public ListHistoryBookingResponse getListBooking(GetListBookingRequest request) {
+        KmsPrincipal principal = SecurityUtils.getPrincipal();
+        List<BookingEntity> bookings = bookingDslRepository.listBookingByFootBallPitch(request,principal.getFootballPitchId());
+        List<HistoryBookingDTO> historyBookings = new ArrayList<>();
+        bookings.forEach(b -> {
+            List<BookingOtherServiceEntity> bookingOtherServices = bookingOtherServiceRepository.findByBookingId(b.getBookingId());
+            historyBookings.add(toBuilder(b, bookingOtherServices));
+        });
+        return ListHistoryBookingResponse.builder()
+                .setSuccess(true)
+                .setHistoryBookings(historyBookings)
+                .build();
     }
 
     private HistoryBookingDTO toBuilder(BookingEntity booking, List<BookingOtherServiceEntity> bookingOtherServices) {
