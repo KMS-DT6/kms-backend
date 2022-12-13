@@ -48,29 +48,26 @@ public class BookingServiceImpl implements BookingService {
 
     public void validFormatField(Map<String, String> errors, CreateBookingRequest request) {
         if (request.getBookDay() == null) {
-            errors.put("bookday", ErrorCode.MISSING_VALUE.name());
-        } else if(request.getBookDay().isBefore(LocalDate.now())){
-            errors.put("bookday", ErrorCode.INVALID_VALUE.name());
+            errors.put("bookDay", ErrorCode.MISSING_VALUE.name());
+        } else if (request.getBookDay().isBefore(LocalDate.now())) {
+            errors.put("bookDay", ErrorCode.INVALID_VALUE.name());
         }
-        if (request.getSubFootballPitchId() == null){
+        if (request.getSubFootballPitchId() == null) {
             errors.put("subFootBallPitchId", ErrorCode.MISSING_VALUE.name());
         }
-        if(request.getTimeEnd() == null){
+        if (request.getTimeEnd() == null) {
             errors.put("timeEnd", ErrorCode.MISSING_VALUE.name());
         }
-        if(request.getTimeStart() == null){
+        if (request.getTimeStart() == null) {
             errors.put("timeStart", ErrorCode.MISSING_VALUE.name());
         }
-        if(request.getTimeStart()!=null && request.getTimeEnd()!=null){
-            if(request.getTimeStart().isAfter(request.getTimeEnd())){
-                errors.put("timeStart and TimeEnd", ErrorCode.INVALID_VALUE.name());
+        if (request.getTimeStart() != null && request.getTimeEnd() != null) {
+            if (request.getTimeStart().isAfter(request.getTimeEnd())) {
+                errors.put("time", ErrorCode.INVALID_VALUE.name());
             } else {
-                long minutes = Duration.between(request.getTimeStart(), request.getTimeEnd()).toMinutes();
                 long hours = Duration.between(request.getTimeStart(), request.getTimeEnd()).toHours();
-                if(minutes % 60 != 0){
-                    errors.put("timeStart and TimeEnd", ErrorCode.INVALID_VALUE.name());
-                } else if(hours<1 || hours > 2){
-                    errors.put("timeStart and TimeEnd", ErrorCode.INVALID_VALUE.name());
+                if (hours != 1 && hours != 2) {
+                    errors.put("time", ErrorCode.INVALID_VALUE.name());
                 }
             }
         }
@@ -83,22 +80,23 @@ public class BookingServiceImpl implements BookingService {
                 errors.put("subFootBallPitchId", ErrorCode.NOT_FOUND.name());
             }
         }
-        if(!errors.containsKey("subFootBallPitchId")&& request.getBookingOtherService()!= null && request.getBookingOtherService().size()>0){
-            for (BookingOtherServiceRequest b: request.getBookingOtherService()
+        if (!errors.containsKey("subFootBallPitchId") && request.getBookingOtherService() != null && request.getBookingOtherService().size() > 0) {
+            for (BookingOtherServiceRequest b : request.getBookingOtherService()
             ) {
-                Optional<OtherServiceEntity> otherService =otherServiceRepository.findById(b.getOtherServiceId());
+                Optional<OtherServiceEntity> otherService = otherServiceRepository.findById(b.getOtherServiceId());
                 SubFootballPitchEntity subFootballPitch = subFootballPitchRepository.findById(request.getSubFootballPitchId()).get();
-                if(otherService.isEmpty()){
+                if (otherService.isEmpty()) {
                     errors.put("bookingOtherService", ErrorCode.NOT_FOUND.name());
                     break;
-                } else if(!otherService.get().getFootballPitch().getFootballPitchId()
-                        .equals(subFootballPitch.getFootballPitch().getFootballPitchId())){
+                } else if (!otherService.get().getFootballPitch().getFootballPitchId()
+                        .equals(subFootballPitch.getFootballPitch().getFootballPitchId())) {
                     errors.put("bookingOtherService", ErrorCode.NOT_FOUND.name());
                     break;
                 }
             }
         }
     }
+
     @Override
     public OnlyIdResponse createBooking(CreateBookingRequest request) {
         KmsPrincipal principal = SecurityUtils.getPrincipal();
@@ -126,9 +124,9 @@ public class BookingServiceImpl implements BookingService {
         int hours = (int) Duration.between(booking.getTimeStart(), booking.getTimeEnd()).toHours();
         booking.setTotalPrice(booking.getSubFootballPitch().getPricePerHour() * hours);
         bookingRepository.save(booking);
-        if(request.getBookingOtherService()!= null && request.getBookingOtherService().size()>0){
+        if (request.getBookingOtherService() != null && request.getBookingOtherService().size() > 0) {
             List<BookingOtherServiceEntity> bookingOtherServiceEntities = new ArrayList<>();
-            for (BookingOtherServiceRequest b: request.getBookingOtherService()
+            for (BookingOtherServiceRequest b : request.getBookingOtherService()
             ) {
                 BookingOtherServiceEntity bookingOtherService = new BookingOtherServiceEntity();
                 bookingOtherService.setBooking(booking);
@@ -148,54 +146,55 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public GetBookingResponse getBooking(Long idBooking) throws AccessDeniedException {
         Optional<BookingEntity> booking = bookingRepository.findById(idBooking);
-        if(booking.isEmpty()){
-            throw new NotFoundException("not found idBooking");
+        if (booking.isEmpty()) {
+            throw new NotFoundException("Not found booking");
         }
         KmsPrincipal principal = SecurityUtils.getPrincipal();
-        if(!checkAuthority(booking.get(),principal)) {
-            throw new AccessDeniedException("access deined");
+        if (!checkAuthority(booking.get(), principal)) {
+            throw new AccessDeniedException("Access Denied");
         }
         List<BookingOtherServiceEntity> bookingOtherServices = bookingOtherServiceRepository.findByBookingId(booking.get().getBookingId());
         return GetBookingResponse.builder()
                 .setSuccess(true)
-                .setBookingDTO(toBuilder(booking.get(),bookingOtherServices))
+                .setBookingDTO(toBuilder(booking.get(), bookingOtherServices))
                 .build();
     }
 
-    public boolean checkAuthority(BookingEntity booking, KmsPrincipal principal){
-        if(principal.isCustomer() &&
-                ! booking.getCustomer().getUserId().equals(principal.getUserId())){
+    public boolean checkAuthority(BookingEntity booking, KmsPrincipal principal) {
+        if (principal.isCustomer() &&
+                !booking.getCustomer().getUserId().equals(principal.getUserId())) {
             return false;
-        } else if(principal.isFootballPitchAdmin()) {
+        } else if (principal.isFootballPitchAdmin()) {
             List<UserEntity> users = userDslRepository.listFootballPitchAdmin(booking.getSubFootballPitch().getFootballPitch().getFootballPitchId());
-            int s =0;
-            for (UserEntity u:users
+            int s = 0;
+            for (UserEntity u : users
             ) {
-                if(u.getUserId().equals(principal.getUserId())){
+                if (u.getUserId().equals(principal.getUserId())) {
                     s++;
                     break;
                 }
             }
-            if(s==0){
+            if (s == 0) {
                 return false;
             }
         }
         return true;
     }
+
     @Override
     public NoContentResponse deleteBooking(Long idBooking) throws AccessDeniedException {
         Optional<BookingEntity> booking = bookingRepository.findById(idBooking);
-        if(booking.isEmpty()){
+        if (booking.isEmpty()) {
             throw new NotFoundException("not found idBooking");
         }
         KmsPrincipal principal = SecurityUtils.getPrincipal();
-        if(!booking.get().getCustomer().getUserId().equals(principal.getUserId())){
+        if (!booking.get().getCustomer().getUserId().equals(principal.getUserId())) {
             throw new AccessDeniedException("access deined");
         }
-        long hour = Duration.between(LocalTime.now(),booking.get().getTimeStart()).toHours();
-        int d =LocalDate.now().compareTo(booking.get().getBookDay());
-        if(d==0 && hour <6){
-            throw new AccessDeniedException("không thể xóa đặt lịch khi thời gian đến lịch hẹn chỉ còn 6 tiếng");
+        long hour = Duration.between(LocalTime.now(), booking.get().getTimeStart()).toHours();
+        int date = LocalDate.now().compareTo(booking.get().getBookDay());
+        if (date == 0 && hour < 6) {
+            throw new AccessDeniedException("Can not delete booking");
         }
         booking.get().setStatus(KmsConstant.CANCELED);
         bookingRepository.save(booking.get());
@@ -207,18 +206,18 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public OnlyIdResponse updateBooking(CreateBookingRequest request, Long id) throws AccessDeniedException {
         Optional<BookingEntity> booking = bookingRepository.findById(id);
-        if(booking.isEmpty()){
-            throw new NotFoundException("not found idBooking");
+        if (booking.isEmpty()) {
+            throw new NotFoundException("Not found booking");
         }
         KmsPrincipal principal = SecurityUtils.getPrincipal();
         Map<String, String> errors = new HashMap<>();
-        if(!booking.get().getCustomer().getUserId().equals(principal.getUserId())){
-            throw new AccessDeniedException("access deined");
+        if (!booking.get().getCustomer().getUserId().equals(principal.getUserId())) {
+            throw new AccessDeniedException("Access Denied");
         }
-        long hour = Duration.between(LocalTime.now(),booking.get().getTimeStart()).toHours();
-        int d =LocalDate.now().compareTo(booking.get().getBookDay());
-        if(d==0 && hour <6){
-            throw new AccessDeniedException("không thể chỉnh sửa khi thời gian đến lịch hẹn chỉ còn 6 tiếng");
+        long hour = Duration.between(LocalTime.now(), booking.get().getTimeStart()).toHours();
+        int d = LocalDate.now().compareTo(booking.get().getBookDay());
+        if (d == 0 && hour < 6) {
+            throw new AccessDeniedException("Can not delete booking");
         }
         validFormatField(errors, request);
         validExistField(errors, request);
@@ -239,11 +238,11 @@ public class BookingServiceImpl implements BookingService {
         booking.get().setModifiedBy(principal.getUserId());
         booking.get().setModifiedDate(new Timestamp(System.currentTimeMillis()));
         booking.get().setStatus(KmsConstant.WAITING);
-        if(request.getBookingOtherService() != null && request.getBookingOtherService().size()>0){
+        if (request.getBookingOtherService() != null && request.getBookingOtherService().size() > 0) {
             List<BookingOtherServiceEntity> list = bookingOtherServiceRepository.findByBookingId(booking.get().getBookingId());
             bookingOtherServiceRepository.deleteAll(list);
             List<BookingOtherServiceEntity> bookingOtherServiceEntities = new ArrayList<>();
-            for (BookingOtherServiceRequest b: request.getBookingOtherService()
+            for (BookingOtherServiceRequest b : request.getBookingOtherService()
             ) {
                 BookingOtherServiceEntity bookingOtherService = new BookingOtherServiceEntity();
                 bookingOtherService.setBooking(booking.get());
@@ -263,7 +262,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public ListBookingResponse getListBooking(GetListBookingRequest request) {
         KmsPrincipal principal = SecurityUtils.getPrincipal();
-        List<BookingEntity> bookings = bookingDslRepository.listBookingByFootBallPitch(request,principal.getFootballPitchId());
+        List<BookingEntity> bookings = bookingDslRepository.listBookingByFootBallPitch(request, principal.getFootballPitchId());
         List<BookingDTO> historyBookings = new ArrayList<>();
         bookings.forEach(b -> {
             List<BookingOtherServiceEntity> bookingOtherServices = bookingOtherServiceRepository.findByBookingId(b.getBookingId());
@@ -278,12 +277,12 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public NoContentResponse acceptBooking(Long idBooking) throws AccessDeniedException {
         Optional<BookingEntity> booking = bookingRepository.findById(idBooking);
-        if(booking.isEmpty()){
-            throw new NotFoundException("not found idBooking");
+        if (booking.isEmpty()) {
+            throw new NotFoundException("Not found booking");
         }
         KmsPrincipal principal = SecurityUtils.getPrincipal();
-        if(!checkAuthority(booking.get(),principal)) {
-            throw new AccessDeniedException("access deined");
+        if (!checkAuthority(booking.get(), principal)) {
+            throw new AccessDeniedException("Access Denied");
         }
         booking.get().setStatus(KmsConstant.ACCEPTED);
         bookingRepository.save(booking.get());
