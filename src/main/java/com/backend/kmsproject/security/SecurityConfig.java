@@ -52,6 +52,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .hasAnyAuthority(KmsRole.ADMIN_ROLE.getRole(), KmsRole.FOOTBALL_PITCH_ROLE.getRole());
         http.authorizeRequests().antMatchers("/api/other-services/**")
                 .hasAuthority(KmsRole.FOOTBALL_PITCH_ROLE.getRole());
+        http.authorizeRequests().antMatchers("/api/booking-pitches/accept/**")
+                .hasAuthority(KmsRole.FOOTBALL_PITCH_ROLE.getRole());
+        http.authorizeRequests().antMatchers(HttpMethod.POST,"/api/booking-pitches/**")
+                .hasAuthority(KmsRole.CUSTOMER_ROLE.getRole());
+        http.authorizeRequests().antMatchers(HttpMethod.PUT,"/api/booking-pitches/**")
+                .hasAuthority(KmsRole.CUSTOMER_ROLE.getRole());
+        http.authorizeRequests().antMatchers(HttpMethod.DELETE,"/api/booking-pitches/**")
+                .hasAuthority(KmsRole.CUSTOMER_ROLE.getRole());
+        http.authorizeRequests().antMatchers("/api/booking-pitches/**")
+                .hasAnyAuthority(KmsRole.CUSTOMER_ROLE.getRole(),KmsRole.FOOTBALL_PITCH_ROLE.getRole());
         http.authorizeRequests().anyRequest().authenticated();
         http.addFilter(filter);
         http.addFilterBefore(new CustomAuthorizationFilter(userDetailsService),

@@ -7,5 +7,5 @@ public enum ErrorCode {
     INVALID_VALUE,
     DUPLICATED,
     TOO_LONG,
-    TOO_SHORT;
+    TOO_SHORT,
 }

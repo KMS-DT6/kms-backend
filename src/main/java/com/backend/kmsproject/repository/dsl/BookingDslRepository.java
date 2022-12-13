@@ -2,6 +2,7 @@ package com.backend.kmsproject.repository.dsl;
 
 import com.backend.kmsproject.common.enums.KmsRole;
 import com.backend.kmsproject.model.entity.*;
+import com.backend.kmsproject.request.booking.GetListBookingRequest;
 import com.backend.kmsproject.request.myaccount.GetListHistoryBookingRequest;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -30,6 +31,34 @@ public class BookingDslRepository {
                 .where(user.role.roleId.eq(KmsRole.CUSTOMER_ROLE.getRoleId()));
         if (StringUtils.hasText(request.getFootballPitchName())) {
             query.where(footballPitch.footballPitchName.containsIgnoreCase(request.getFootballPitchName()));
+        }
+        if (StringUtils.hasText(request.getFromDate()) && StringUtils.hasText(request.getToDate())
+                && LocalDate.parse(request.getFromDate()).isBefore(LocalDate.parse(request.getToDate()))) {
+            query.where(booking.bookDay.between(LocalDate.parse(request.getFromDate()),
+                    LocalDate.parse(request.getToDate())));
+        }
+        if (request.getStatus() != null) {
+            query.where(booking.status.eq(request.getStatus()));
+        }
+        if (request.getIsPaid() != null) {
+            query.where(booking.isPaid.eq(request.getIsPaid()));
+        }
+        return query.fetch();
+    }
+
+    public List<BookingEntity> listBookingByFootBallPitch(GetListBookingRequest request, Long footballPitchId){
+        JPAQuery<BookingEntity> query = queryFactory.select(booking)
+                .from(booking)
+                .innerJoin(user).on(booking.customer.userId.eq(user.userId))
+                .innerJoin(footballPitch).on(booking.subFootballPitch.footballPitch
+                        .footballPitchId.eq(footballPitch.footballPitchId))
+                .where(footballPitch.footballPitchId.eq(footballPitchId));
+        if (request.getSubFootballPitchId() != null) {
+            query.where(booking.subFootballPitch.subFootBallPitchId.eq(request.getSubFootballPitchId()));
+        }
+        if (StringUtils.hasText(request.getCustomerName())) {
+            query.where(user.firstName.concat(" ").concat(user.lastName)
+                    .containsIgnoreCase(request.getCustomerName()));
         }
         if (StringUtils.hasText(request.getFromDate()) && StringUtils.hasText(request.getToDate())
                 && LocalDate.parse(request.getFromDate()).isBefore(LocalDate.parse(request.getToDate()))) {
