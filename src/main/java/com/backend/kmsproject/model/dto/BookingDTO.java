@@ -10,7 +10,7 @@ import java.util.List;
 @Getter
 @Setter
 @Builder(setterPrefix = "set")
-public class HistoryBookingDTO implements Serializable {
+public class BookingDTO implements Serializable {
     private Long bookingId;
     private String bookDate;
     private String timeStart;
@@ -19,8 +19,9 @@ public class HistoryBookingDTO implements Serializable {
     private String status;
     private Double pricePitch;
     private Double totalPriceIncludeService;
-    private OtherService otherService;
-    private FootballPitch footballPitch;
+    private BookingDTO.OtherService otherService;
+    private BookingDTO.FootballPitch footballPitch;
+    private UserDto customer;
 
     @Getter
     @Setter
@@ -28,7 +29,7 @@ public class HistoryBookingDTO implements Serializable {
     public static class FootballPitch {
         private String footballPitchName;
         private String subFootballPitchName;
-        private Address address;
+        private HistoryBookingDTO.FootballPitch.Address address;
 
         @Getter
         @Setter
@@ -46,7 +47,7 @@ public class HistoryBookingDTO implements Serializable {
     public static class OtherService {
         private Integer totalItems;
         private Double totalPriceOtherService;
-        private List<Item> items;
+        private List<HistoryBookingDTO.OtherService.Item> items;
 
         @Getter
         @Setter
@@ -56,5 +57,15 @@ public class HistoryBookingDTO implements Serializable {
             private Integer quantity;
             private Double price;
         }
+    }
+
+    @Getter
+    @Setter
+    @Builder(setterPrefix = "set")
+    public static class UserDto{
+        private Long userId;
+        private String firstName;
+        private String lastName;
+        private String phoneNumber;
     }
 }

@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.nio.file.AccessDeniedException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
@@ -31,6 +32,17 @@ public class RequestExceptionHandler {
                 .setDateTime(DatetimeUtils.formatLocalDateTimeNow())
                 .build();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<?> handleAccessDeniedException(AccessDeniedException exception){
+        Response<?> errors = Response.builder()
+                .setSuccess(false)
+                .setMessage(exception.getMessage())
+                .setErrorDTOs(null)
+                .setDateTime(DatetimeUtils.formatLocalDateTimeNow())
+                .build();
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errors);
     }
 
 }

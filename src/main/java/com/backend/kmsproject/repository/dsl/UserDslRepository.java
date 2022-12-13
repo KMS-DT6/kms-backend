@@ -7,6 +7,7 @@ import com.backend.kmsproject.request.footballpitchadmin.GetListFootballPitchAdm
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
@@ -31,6 +32,16 @@ public class UserDslRepository {
                     .or(user.firstName.concat(" ").concat(user.lastName)
                             .containsIgnoreCase(request.getContextSearch()))
                     .or(user.phoneNumber.containsIgnoreCase(request.getContextSearch())));
+        }
+        return query.fetch();
+    }
+
+    public List<UserEntity> listFootballPitchAdmin(Long footballPitchId){
+        JPAQuery<UserEntity> query = queryFactory.select(user)
+                .from(user)
+                .where(user.role.roleId.eq(KmsRole.FOOTBALL_PITCH_ROLE.getRoleId()));
+        if (footballPitchId != null && footballPitchId > 0) {
+            query.where(user.footballPitch.footballPitchId.eq(footballPitchId));
         }
         return query.fetch();
     }
