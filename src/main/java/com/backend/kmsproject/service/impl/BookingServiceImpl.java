@@ -48,9 +48,9 @@ public class BookingServiceImpl implements BookingService {
     private final OtherServiceRepository otherServiceRepository;
 
     public void validFormatField(Map<String, String> errors, CreateBookingRequest request) {
-        if (request.getBookDay() == null) {
+        if (!StringUtils.hasText(request.getBookDay())) {
             errors.put("bookDay", ErrorCode.MISSING_VALUE.name());
-        } else if (request.getBookDay().isBefore(LocalDate.now())) {
+        } else if (LocalDate.parse(request.getBookDay()).isBefore(LocalDate.now())) {
             errors.put("bookDay", ErrorCode.INVALID_VALUE.name());
         }
         if (request.getSubFootballPitchId() == null) {
@@ -117,7 +117,7 @@ public class BookingServiceImpl implements BookingService {
                     .build();
         }
         BookingEntity booking = new BookingEntity();
-        booking.setBookDay(request.getBookDay());
+        booking.setBookDay(LocalDate.parse(request.getBookDay()));
         booking.setCustomer(userRepository.findById(principal.getUserId()).get());
         booking.setStatus(KmsConstant.WAITING);
         booking.setTimeStart(LocalTime.parse(request.getTimeStart()));
@@ -234,7 +234,7 @@ public class BookingServiceImpl implements BookingService {
                             .build())
                     .build();
         }
-        booking.get().setBookDay(request.getBookDay());
+        booking.get().setBookDay(LocalDate.parse(request.getBookDay()));
         booking.get().setTimeStart(LocalTime.parse(request.getTimeStart()));
         booking.get().setTimeEnd(LocalTime.parse(request.getTimeEnd()));
         booking.get().setSubFootballPitch(subFootballPitchRepository.findById(request.getSubFootballPitchId()).get());
