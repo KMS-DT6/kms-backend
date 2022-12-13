@@ -24,6 +24,7 @@ import com.backend.kmsproject.util.DatetimeUtils;
 import com.backend.kmsproject.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.nio.file.AccessDeniedException;
 import java.sql.Timestamp;
@@ -54,18 +55,22 @@ public class BookingServiceImpl implements BookingService {
         }
         if (request.getSubFootballPitchId() == null) {
             errors.put("subFootBallPitchId", ErrorCode.MISSING_VALUE.name());
+        } else if (request.getSubFootballPitchId() < 0) {
+            errors.put("subFootBallPitchId", ErrorCode.INVALID_VALUE.name());
         }
-        if (request.getTimeEnd() == null) {
-            errors.put("timeEnd", ErrorCode.MISSING_VALUE.name());
-        }
-        if (request.getTimeStart() == null) {
+        if (!StringUtils.hasText(request.getTimeStart())) {
             errors.put("timeStart", ErrorCode.MISSING_VALUE.name());
         }
+        if (!StringUtils.hasText(request.getTimeEnd())) {
+            errors.put("timeEnd", ErrorCode.MISSING_VALUE.name());
+        }
         if (request.getTimeStart() != null && request.getTimeEnd() != null) {
-            if (request.getTimeStart().isAfter(request.getTimeEnd())) {
+            LocalTime timeStart = LocalTime.parse(request.getTimeStart());
+            LocalTime timeEnd = LocalTime.parse(request.getTimeEnd());
+            if (timeStart.isAfter(timeEnd)) {
                 errors.put("time", ErrorCode.INVALID_VALUE.name());
             } else {
-                long hours = Duration.between(request.getTimeStart(), request.getTimeEnd()).toHours();
+                long hours = Duration.between(timeStart, timeEnd).toHours();
                 if (hours != 1 && hours != 2) {
                     errors.put("time", ErrorCode.INVALID_VALUE.name());
                 }
@@ -115,8 +120,8 @@ public class BookingServiceImpl implements BookingService {
         booking.setBookDay(request.getBookDay());
         booking.setCustomer(userRepository.findById(principal.getUserId()).get());
         booking.setStatus(KmsConstant.WAITING);
-        booking.setTimeStart(request.getTimeStart());
-        booking.setTimeEnd(request.getTimeEnd());
+        booking.setTimeStart(LocalTime.parse(request.getTimeStart()));
+        booking.setTimeEnd(LocalTime.parse(request.getTimeEnd()));
         booking.setIsPaid(Boolean.FALSE);
         booking.setSubFootballPitch(subFootballPitchRepository.findById(request.getSubFootballPitchId()).get());
         booking.setCreatedBy(principal.getUserId());
@@ -230,8 +235,8 @@ public class BookingServiceImpl implements BookingService {
                     .build();
         }
         booking.get().setBookDay(request.getBookDay());
-        booking.get().setTimeStart(request.getTimeStart());
-        booking.get().setTimeEnd(request.getTimeEnd());
+        booking.get().setTimeStart(LocalTime.parse(request.getTimeStart()));
+        booking.get().setTimeEnd(LocalTime.parse(request.getTimeEnd()));
         booking.get().setSubFootballPitch(subFootballPitchRepository.findById(request.getSubFootballPitchId()).get());
         int hours = (int) Duration.between(booking.get().getTimeStart(), booking.get().getTimeEnd()).toHours();
         booking.get().setTotalPrice(booking.get().getSubFootballPitch().getPricePerHour() * hours);
