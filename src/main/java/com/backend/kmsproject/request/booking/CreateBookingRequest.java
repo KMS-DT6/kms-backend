@@ -13,7 +13,7 @@ import java.util.List;
 public class CreateBookingRequest {
     private Long subFootballPitchId;
     private LocalDate bookDay;
-    private LocalTime timeStart;
-    private LocalTime timeEnd;
+    private String timeStart;
+    private String timeEnd;
     private List<BookingOtherServiceRequest> bookingOtherService;
 }
